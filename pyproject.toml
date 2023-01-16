@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "http-plus-purplelemons-dev"
+version = "0.0.1"
+authors = [
+    {name = "PurpleLemons", email = "josh@thebasement.group"}
+]
+description = "A high-level, dynamic HTTP server for Python. Quickly deploy simple servers, or customize complex, high-performance ones."
+readme = "readme.md"
+requires-python = ">=3.9"
+license = {text= "GLPv3"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/purplelemons-dev/httpplus"
+"Bug Tracker" = "https://github.com/purplelemons-dev/httpplus/issues"

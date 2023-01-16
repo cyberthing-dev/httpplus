@@ -1,0 +1,30 @@
+Metadata-Version: 2.1
+Name: http-plus-purplelemons-dev
+Version: 0.0.1
+Summary: A high-level, dynamic HTTP server for Python. Quickly deploy simple servers, or customize complex, high-performance ones.
+Author-email: PurpleLemons <josh@thebasement.group>
+License: GLPv3
+Project-URL: Homepage, https://github.com/purplelemons-dev/httpplus
+Project-URL: Bug Tracker, https://github.com/purplelemons-dev/httpplus/issues
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Topic :: Internet :: WWW/HTTP :: HTTP Servers
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Typing :: Typed
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+
+
+# HTTPPlus
+hi welcome to http plus
+
+its just a better http server (there isnt any https yet tho :( )
+
+[//]: # (TODO: add more stuff here)

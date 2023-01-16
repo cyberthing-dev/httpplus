@@ -1,0 +1,7 @@
+LICENSE
+pyproject.toml
+src/http-plus-purplelemons-dev/__init__.py
+src/http_plus_purplelemons_dev.egg-info/PKG-INFO
+src/http_plus_purplelemons_dev.egg-info/SOURCES.txt
+src/http_plus_purplelemons_dev.egg-info/dependency_links.txt
+src/http_plus_purplelemons_dev.egg-info/top_level.txt
