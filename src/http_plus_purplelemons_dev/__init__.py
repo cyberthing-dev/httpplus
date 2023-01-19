@@ -22,3 +22,6 @@ In order to access /, the server will look for ./pages/.html. Smiliar thing for 
 You can customize error pages 
 """
 
+# TODO: Add a `-m` script that automatically creates a base directory.
+# ^ either that or serve pre-defined responses from hardcoded text
+

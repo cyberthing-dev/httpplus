@@ -1,6 +1,20 @@
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from content_types import detect_content_type
+from dataclasses import dataclass
+
+@dataclass
+class Route:
+    """Custom dataclass for optimizing route creation, readability, and resolution.
+
+    Attributes:
+        `request_from (str)`: The path to respond to.
+        `send_to (str)`: The directory to respond with in the form of `./path/to/directory/`.
+        `route_type (str)`: The type of route. Can be either `pages` or `errors`.
+    """
+    request_from:str
+    send_to:str
+    route_type:str
 
 class RouteExistsError(Exception):
     """Raised when a route already exists."""
@@ -18,6 +32,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             "css",
             "js"
         ]
+        self.errors_dir = "./errors/"
+        self.pages_dir = "./pages/"
         super().__init__(request, client_address, server)
 
     def respond(self, code:int, message:str, content_type:str="text/plain") -> None:
@@ -81,6 +97,6 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.respond_file(200, self.routes[self.path] + ".html")
         else:
             try:
-                self.respond_file(404, self.routes["/error"] + ".html")
+                self.respond_file(404, self.routes["/error"] + "404/.html")
             except FileNotFoundError:
                 self.respond(404, "")
