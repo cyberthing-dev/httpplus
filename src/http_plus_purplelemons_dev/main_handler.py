@@ -1,7 +1,8 @@
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from content_types import detect_content_type
+from content_types import detect_content_type, TYPES
 from dataclasses import dataclass
+from static_pages import SEND_ERROR
 
 @dataclass
 class Route:
@@ -27,11 +28,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             "/": "./pages/",
             "/notfound": "./errors/404/"
         }
-        self.extension_auto_search = [
-            "html",
-            "css",
-            "js"
-        ]
+        self.extension_auto_search = list(TYPES.keys())
         self.errors_dir = "./errors/"
         self.pages_dir = "./pages/"
         super().__init__(request, client_address, server)
@@ -92,11 +89,14 @@ class RequestHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         """Handles GET requests."""
         # path is the first part of the request, extension is everythign after the last `.`
-        path, extension = ".".join(self.path.split(".")[:-1]), self.path.split(".")[-1]
-        if self.path in self.routes:
-            self.respond_file(200, self.routes[self.path] + ".html")
+        if "." in self.path:
+            path, extension = ".".join(self.path.split(".")[:-1]), self.path.split(".")[-1]
+        else:
+            path, extension = self.path, ""
+        if path in self.routes:
+            self.respond_file(200, self.routes[path] + f".{extension}" if extension else ".html")
         else:
             try:
-                self.respond_file(404, self.routes["/error"] + "404/.html")
+                self.respond_file(404, self.errors_dir + "404/.html")
             except FileNotFoundError:
-                self.respond(404, "")
+                self.respond(404, SEND_ERROR(404,path), content_type="text/html")
