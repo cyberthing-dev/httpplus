@@ -6,7 +6,7 @@ hi welcome to http plus. It's a high-level, dynamic HTTP server for Python. Quic
 - [ ] HTTPS
 - [ ] CLI
 - [ ] Documentation
-- [ ] Console
-- [ ] Config file support
+- [ ] GUI Console
+- [ ] Config file support?
 
 [//]: # (TODO: add more stuff here)
