@@ -2,7 +2,7 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from content_types import detect_content_type, TYPES
 from dataclasses import dataclass
-from static_pages import SEND_ERROR
+from http_plus_purplelemons_dev.static_responses import SEND_RESPONSE_CODE
 
 @dataclass
 class Route:
@@ -99,4 +99,4 @@ class RequestHandler(BaseHTTPRequestHandler):
             try:
                 self.respond_file(404, self.errors_dir + "404/.html")
             except FileNotFoundError:
-                self.respond(404, SEND_ERROR(404,path), content_type="text/html")
+                self.respond(404, SEND_RESPONSE_CODE(404,path), content_type="text/html")
