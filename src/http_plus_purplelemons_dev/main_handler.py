@@ -1,21 +1,24 @@
 
-from http.server import BaseHTTPRequestHandler, HTTPServer
-from content_types import detect_content_type, TYPES
 from dataclasses import dataclass
+from content_types import detect_content_type, TYPES
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from http_plus_purplelemons_dev.static_responses import SEND_RESPONSE_CODE
 
 @dataclass
 class Route:
     """Custom dataclass for optimizing route creation, readability, and resolution.
+    Functional routes should include a `Route.func` attribute.
 
     Attributes:
         `request_from (str)`: The path to respond to.
         `send_to (str)`: The directory to respond with in the form of `./path/to/directory/`.
-        `route_type (str)`: The type of route. Can be either `pages` or `errors`.
+        `route_type (str)`: The type of route. Can be either `pages`, `errors`, or `func`.
+        `func (function)`: The function to call when the route is requested. The function must accept a `Self@RequestHandler` as the first argument.
     """
     request_from:str
     send_to:str
     route_type:str
+    func:function = None
 
 class RouteExistsError(Exception):
     """Raised when a route already exists."""
@@ -24,16 +27,16 @@ class RouteExistsError(Exception):
 class RequestHandler(BaseHTTPRequestHandler):
     def __init__(self, request, client_address, server) -> None:
         """Initializes the request handler."""
-        self.routes:dict[str,str] = {
-            "/": "./pages/",
-            "/notfound": "./errors/404/"
-        }
-        self.extension_auto_search = list(TYPES.keys())
         self.errors_dir = "./errors/"
         self.pages_dir = "./pages/"
+        self.routes:list[Route] = [
+            Route("/", self.pages_dir, "pages"),
+            Route("/errors/", self.errors_dir, "errors")
+        ]
+        self.extension_auto_search = list(TYPES.keys())
         super().__init__(request, client_address, server)
 
-    def respond(self, code:int, message:str, content_type:str="text/plain") -> None:
+    def respond(self, code:int, message:str, content_type:str="text/plain", headers:dict[str,str]={}) -> None:
         """Responds to the client with a message custom message. See `respond_file` for the prefered response method.
 
         Args:
@@ -42,6 +45,8 @@ class RequestHandler(BaseHTTPRequestHandler):
         """
         self.send_response(code)
         self.send_header("Content-type", content_type)
+        for header, value in headers.items():
+            self.send_header(header, value)
         self.end_headers()
         self.wfile.write(message.encode())
 
@@ -66,9 +71,23 @@ class RequestHandler(BaseHTTPRequestHandler):
             `directory (str)`: The directory to respond with in the form of `./path/to/directory/`.
             `override (bool)`: Whether or not to override the route if it already exists. Raises RouteExistsError if the route already exists and `override` is False.
         """
-        if request_path in self.routes and not override:
+        if request_path in [i.request_from for i in self.routes] and not override:
             raise RouteExistsError(f"Route {request_path} already exists.")
-        self.routes[request_path] = directory
+        self.routes.append(Route(request_path, directory, "pages"))
+
+    def resolve_route(self, request_path:str) -> "str|None":
+        """Gets a route from the server.
+
+        Args:
+            `request_path (str)`: The path to respond to.
+
+        Returns:
+            `str`: The directory to respond with in the form of `./path/to/directory/`
+        """
+        for route in self.routes:
+            if route.request_from == request_path:
+                return route.send_to
+        return None
 
     def add_extension(self,extension:str):
         """Adds an extension to the list of extensions to search for when some path containing a file extension is requested.
@@ -89,14 +108,24 @@ class RequestHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         """Handles GET requests."""
         # path is the first part of the request, extension is everythign after the last `.`
-        if "." in self.path:
-            path, extension = ".".join(self.path.split(".")[:-1]), self.path.split(".")[-1]
-        else:
-            path, extension = self.path, ""
-        if path in self.routes:
-            self.respond_file(200, self.routes[path] + f".{extension}" if extension else ".html")
-        else:
-            try:
-                self.respond_file(404, self.errors_dir + "404/.html")
-            except FileNotFoundError:
-                self.respond(404, SEND_RESPONSE_CODE(404,path), content_type="text/html")
+        try:
+            route = self.resolve_route(self.path)
+            if route:
+                self.respond_file(200, route)
+                return
+            if not self.path.endswith("/"):
+                self.path += "/"
+            for extension in self.extension_auto_search:
+                try:
+                    self.respond_file(200, self.pages_dir[:-1] + self.path + extension)
+                    return
+                except FileNotFoundError:
+                    pass
+            else:
+                try:
+                    self.respond_file(404, self.errors_dir + "404/.html")
+                except FileNotFoundError:
+                    self.respond(404, SEND_RESPONSE_CODE(404,self.path), content_type="text/html")
+        except Exception as e:
+            print(e)
+            self.respond(500, SEND_RESPONSE_CODE(500), content_type="text/html")
