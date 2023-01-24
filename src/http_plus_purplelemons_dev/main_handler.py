@@ -18,7 +18,7 @@ class Route:
     request_from:str
     send_to:str
     route_type:str
-    func:function = None
+    func:"function|None" = None
 
 class RouteExistsError(Exception):
     """Raised when a route already exists."""
