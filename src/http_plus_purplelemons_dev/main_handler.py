@@ -1,28 +1,7 @@
 
-from dataclasses import dataclass
 from content_types import detect_content_type, TYPES
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from http_plus_purplelemons_dev.static_responses import SEND_RESPONSE_CODE
-
-@dataclass
-class Route:
-    """Custom dataclass for optimizing route creation, readability, and resolution.
-    Functional routes should include a `Route.func` attribute.
-
-    Attributes:
-        `request_from (str)`: The path to respond to.
-        `send_to (str)`: The directory to respond with in the form of `./path/to/directory/`.
-        `route_type (str)`: The type of route. Can be either `pages`, `errors`, or `func`.
-        `func (function)`: The function to call when the route is requested. The function must accept a `Self@RequestHandler` as the first argument.
-    """
-    request_from:str
-    send_to:str
-    route_type:str
-    func:"function|None" = None
-
-class RouteExistsError(Exception):
-    """Raised when a route already exists."""
-    pass
 
 class RequestHandler(BaseHTTPRequestHandler):
     def __init__(self, request, client_address, server) -> None:
