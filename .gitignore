@@ -1,0 +1,10 @@
+#.gitignore
+*publish.sh
+secret
+runtest.sh
+.vscode
+tests/.venv
+
+# Ignore below because it's not important -- it's a symbolic link to make testing easier
+tests/http_plus_purplelemons_dev
+src/http_plus_purplelemons_dev/http_plus_purplelemons_dev
