@@ -1,8 +1,19 @@
 
 from http.server import BaseHTTPRequestHandler
+from dataclasses import dataclass
 from json import loads, dumps
 
 
+@dataclass
+class Route:
+    """Custom dataclass for optimizing route creation, readability, and resolution.
+
+    Attributes:
+        `send_to (str)`: The directory to respond with in the form of `./path/to/directory/`, `path/to/file.ext`, etc..
+        `route_type (str)`: The type of route. Can be either `pages` or `errors`.
+    """
+    send_to:str
+    route_type:str
 
 class Request:
     """
@@ -15,7 +26,6 @@ class Request:
         self.headers = request.headers
         self.body = request.rfile.read()
         self.ip, self.port = request.client_address
-
 
     # Dunder pog
     def __repr__(self) -> str:
@@ -55,13 +65,17 @@ class Response:
         self.headers = {}
         self.body = b""
         self.status = 200
+        self.linked = False
+        self._route: Route = None
 
     def set_header(self, header:str, value:str) -> None:
         self.headers[header] = value
     
     def set_body(self, body:bytes|str|dict) -> None:
-        """Automatically pareses the body into bytes, and sets the Content-Type header to application/json if the body is a dict.
-        
+        """
+        Automatically pareses the body into bytes, and sets the Content-Type header to application/json if the body is a dict.
+        Will be overwritten if `Response
+
         Args:
             `body (bytes|str|dict)`: The body of the response.
         """
@@ -72,3 +86,20 @@ class Response:
             self.body = body.encode()
         else:
             self.body = body
+
+    def route(self,path_to:str,link:bool=False):
+        """
+        Will route to the specified path (`path_to`).
+        If `link` is True, this will route to a page rather than a file or directory.
+        (Note: If this is a linked route, then path can be a url to another page entirely.)
+
+        Args:
+            `path_to (str)`: The path to route to.
+            `link (bool)`: Whether or not to route to a page.
+        """
+        if link:
+            self.headers["Location"] = path_to
+            self.status = 302 # Found == temporary redirect
+        else:
+            self._route = Route(path_to, "pages")
+
