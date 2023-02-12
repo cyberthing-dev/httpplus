@@ -1,28 +1,5 @@
 
 
-from dataclasses import dataclass
-
-
-@dataclass
-class Route:
-    """Custom dataclass for optimizing route creation, readability, and resolution.
-    Functional routes should include a `Route.func` attribute.
-
-    Attributes:
-        `request_from (str)`: The path to respond to.
-        `send_to (str)`: The directory to respond with in the form of `./path/to/directory/`.
-        `route_type (str)`: The type of route. Can be either `pages`, `errors`, or `func`.
-    """
-    request_from:str
-    send_to:str
-    route_type:str
-
-class RouteExistsError(Exception):
-    """Raised when a route already exists."""
-    def __init__(self):
-        super().__init__("Route already exists.")
-
-
 class Server:
 
     def __init__(self, host:str, port:int, *, debug:bool=False, **kwargs):

@@ -1,7 +1,28 @@
 
+from dataclasses import dataclass
 from content_types import detect_content_type, TYPES
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from http_plus_purplelemons_dev.static_responses import SEND_RESPONSE_CODE
+
+
+@dataclass
+class Route:
+    """Custom dataclass for optimizing route creation, readability, and resolution.
+    Functional routes should include a `Route.func` attribute.
+
+    Attributes:
+        `request_from (str)`: The path to respond to.
+        `send_to (str)`: The directory to respond with in the form of `./path/to/directory/`.
+        `route_type (str)`: The type of route. Can be either `pages`, `errors`, or `func`.
+    """
+    request_from:str
+    send_to:str
+    route_type:str
+
+class RouteExistsError(Exception):
+    """Raised when a route already exists."""
+    def __init__(self, message:str=None):
+        super().__init__(f"Route {message} already exists." if message else "Route already exists.")
 
 class RequestHandler(BaseHTTPRequestHandler):
     def __init__(self, request, client_address, server) -> None:
@@ -51,7 +72,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             `override (bool)`: Whether or not to override the route if it already exists. Raises RouteExistsError if the route already exists and `override` is False.
         """
         if request_path in [i.request_from for i in self.routes] and not override:
-            raise RouteExistsError(f"Route {request_path} already exists.")
+            raise RouteExistsError(request_path)
         self.routes.append(Route(request_path, directory, "pages"))
 
     def resolve_route(self, request_path:str) -> "str|None":

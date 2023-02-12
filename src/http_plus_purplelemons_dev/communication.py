@@ -1,6 +1,6 @@
 
 from http.server import BaseHTTPRequestHandler
-from json import loads
+from json import loads, dumps
 
 
 
@@ -49,7 +49,6 @@ class Request:
         return self.body.decode()
 
 
-
 class Response:
     def __init__(self, response:BaseHTTPRequestHandler) -> "Response":
         self.response = response
@@ -59,3 +58,17 @@ class Response:
 
     def set_header(self, header:str, value:str) -> None:
         self.headers[header] = value
+    
+    def set_body(self, body:bytes|str|dict) -> None:
+        """Automatically pareses the body into bytes, and sets the Content-Type header to application/json if the body is a dict.
+        
+        Args:
+            `body (bytes|str|dict)`: The body of the response.
+        """
+        if isinstance(body, dict):
+            self.set_header("Content-Type", "application/json")
+            self.body = dumps(body).encode()
+        elif isinstance(body, str):
+            self.body = body.encode()
+        else:
+            self.body = body
