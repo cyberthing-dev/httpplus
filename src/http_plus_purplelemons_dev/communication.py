@@ -5,7 +5,7 @@ from json import loads, dumps
 
 class RouteExistsError(Exception):
     """Raised when a route already exists."""
-    def __init__(self, route:str=None):
+    def __init__(self, route:str=...):
         super().__init__(f"Route {route} already exists." if route else "Route already exists.")
 
 @dataclass
@@ -23,7 +23,7 @@ class Request:
     """
     Request object, passed into HTTP method listeners as the first argument.
     """
-    def __init__(self, request:BaseHTTPRequestHandler) -> "Request":
+    def __init__(self, request:BaseHTTPRequestHandler):
         self.request = request
         self.path = request.path
         self.method = request.command
@@ -68,13 +68,13 @@ class Response:
     Response object, passed into HTTP method listeners as the second argument.
     You must return this from the HTTP method listener function.
     """
-    def __init__(self, response:BaseHTTPRequestHandler) -> "Response":
+    def __init__(self, response:BaseHTTPRequestHandler):
         self.response = response
         self.headers = {}
         self.body = b""
         self.status = 200
         self.linked = False
-        self._route: Route = None
+        self._route: Route
 
     def set_header(self, header:str, value:str) -> None:
         self.headers[header] = value

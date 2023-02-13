@@ -28,8 +28,8 @@ class Handler(BaseHTTPRequestHandler):
         Args:
             `route (Route)`: The route to add.
         """
-        if route.request_from in self.routes:
-            raise RouteExistsError(route.request_from)
+        if request_from in self.routes[method]:
+            raise RouteExistsError(request_from)
         self.routes[method][request_from] = route
 
     def do_GET(self):
@@ -64,12 +64,13 @@ class Server:
             print(f"Listening on http://{self.host}:{self.port}")
         HTTPServer((self.host, self.port), self.handler).serve_forever()
 
-    def base(self, request: Request, Response: Response) -> Response:
+    def base(self, request: Request, response: Response) -> Response:
         """The base function for all routes.
         Args:
             `request (Request)`: The request object.
             `response (Response)`: The response object.
         """
+        return response
 
 
 ### DECORATORS == boilerplate :( ###
