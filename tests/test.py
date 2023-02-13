@@ -32,5 +32,15 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(b"Hello, world!")
 
+    def do_HEAD(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Hello, world!")
+
+    def do_TRACE(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Hello, world!")
+
 server = HTTPServer(("0.0.0.0", 8080), RequestHandler)
 server.serve_forever()

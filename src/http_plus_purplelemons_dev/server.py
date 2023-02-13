@@ -2,12 +2,6 @@
 from communication import *
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-
-class RouteExistsError(Exception):
-    """Raised when a route already exists."""
-    def __init__(self, route:str=None):
-        super().__init__(f"Route {route} already exists." if message else "Route already exists.")
-
 class Handler(BaseHTTPRequestHandler):
     """
     A proprietary HTTP request handler for the server.
@@ -17,11 +11,40 @@ class Handler(BaseHTTPRequestHandler):
 
     def __init__(self, request, client_address, server):
         """Initializes the request handler."""
-        self.routes:dict[str,Route]
+        self.routes:dict[str,dict[str,Route]] = {
+            "get": {},
+            "post": {},
+            "put": {},
+            "delete": {},
+            "patch": {},
+            "head": {},
+            "options": {},
+            "trace": {}
+        }
         super().__init__(request, client_address, server)
+    
+    def add_route(self, route:Route) -> None:
+        """Adds a route to the server.
+        Args:
+            `route (Route)`: The route to add.
+        """
+        if route.request_from in self.routes:
+            raise RouteExistsError(route.request_from)
+        self.routes[route.request_from] = route
+
+    def do_GET(self):
+        for path in self.routes:
+            if self.path == path:
+                self.routes["get"][path].
 
 
 class Server:
+    """
+    Main class for the HTTP Plus server library.
+    * Initialize the server with `server = Server(host, port)`.
+    * Listen to HTTP methods with `@server.<method>(path)`,
+        for example `@server.get("/")`.
+    """
 
     def __init__(self, host:str, port:int, *, debug:bool=False, **kwargs):
         """Initializes the server.
@@ -50,7 +73,8 @@ class Server:
 
     ### DECORATORS == boilerplate :( ###
     def all(path:str) -> function:
-        """A decorator that adds a route to the server. Listens to all HTTP methods.
+        """
+        A decorator that adds a route to the server. Listens to all HTTP methods.
         Args:
             `path (str)`: The path to respond to.
         """
