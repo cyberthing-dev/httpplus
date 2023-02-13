@@ -9,31 +9,27 @@ class Handler(BaseHTTPRequestHandler):
         http.server and httpplus before modifying or substituting this class.
     """
 
-    def __init__(self, request, client_address, server):
-        """Initializes the request handler."""
-        self.routes:dict[str,dict[str,Route]] = {
-            "get": {},
-            "post": {},
-            "put": {},
-            "delete": {},
-            "patch": {},
-            "head": {},
-            "options": {},
-            "trace": {}
-        }
-        super().__init__(request, client_address, server)
-    
-    def add_route(self, method:str, request_from:str, route:Route) -> None:
-        """Adds a route to the server.
-        Args:
-            `route (Route)`: The route to add.
+    routes:dict[str,dict[str,Route]] = {
+        "get": {},
+        "post": {},
+        "put": {},
+        "delete": {},
+        "patch": {},
+        "options": {},
+        "head": {},
+        "trace": {}
+    }
+
+    @staticmethod
+    def resolve_path(path:str) -> str:
         """
-        if request_from in self.routes[method]:
-            raise RouteExistsError(request_from)
-        self.routes[method][request_from] = route
+        Returns the content at the path of a *local* url or file.
+        For url redirection, use `Response.redirect`.
+        """
+        ...
 
     def do_GET(self):
-        for path in self.routes:
+        for path in self.routes["get"]:
             if self.path == path:
                 self.routes["get"][path].send_to
 
