@@ -1,4 +1,5 @@
 
+from communication import *
 from content_types import detect_content_type, TYPES
 from http_plus_purplelemons_dev.static_responses import SEND_RESPONSE_CODE
 
