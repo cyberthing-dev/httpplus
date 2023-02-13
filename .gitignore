@@ -1,7 +1,7 @@
 #.gitignore
 *publish.sh
 secret
-runtest.sh
+runtest.*
 .vscode
 tests/.venv
 
