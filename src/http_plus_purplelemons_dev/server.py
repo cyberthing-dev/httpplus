@@ -23,19 +23,19 @@ class Handler(BaseHTTPRequestHandler):
         }
         super().__init__(request, client_address, server)
     
-    def add_route(self, route:Route) -> None:
+    def add_route(self, method:str, request_from:str, route:Route) -> None:
         """Adds a route to the server.
         Args:
             `route (Route)`: The route to add.
         """
         if route.request_from in self.routes:
             raise RouteExistsError(route.request_from)
-        self.routes[route.request_from] = route
+        self.routes[method][request_from] = route
 
     def do_GET(self):
         for path in self.routes:
             if self.path == path:
-                self.routes["get"][path].
+                self.routes["get"][path].send_to
 
 
 class Server:
@@ -71,97 +71,97 @@ class Server:
             `response (Response)`: The response object.
         """
 
-    ### DECORATORS == boilerplate :( ###
-    def all(path:str) -> function:
-        """
-        A decorator that adds a route to the server. Listens to all HTTP methods.
-        Args:
-            `path (str)`: The path to respond to.
-        """
-        # This code is very clever if i do say so myself
-        @Server.get(path)
-        @Server.post(path)
-        @Server.put(path)
-        @Server.delete(path)
-        @Server.patch(path)
-        @Server.options(path)
-        @Server.head(path)
-        @Server.trace(path)
-        def decorator(func:function):
-            ...
-        return decorator
 
-    def get(path:str) -> function:
-        """A decorator that adds a route to the server. Listens to GET requests.
-        Args:
-            `path (str)`: The path to respond to.
-        """
-        def decorator(func:function):
-            response:Response = func()
-            
+### DECORATORS == boilerplate :( ###
+def all(server:Server, path:str):
+    """
+    A decorator that adds a route to the server. Listens to all HTTP methods.
+    Args:
+        `path (str)`: The path to respond to.
+    """
+    # This code is very clever if i do say so myself
+    @get(server, path)
+    @post(server, path)
+    @put(server, path)
+    @delete(server, path)
+    @patch(server, path)
+    @options(server, path)
+    @head(server, path)
+    @trace(server, path)
+    def decorator(func):
+        ...
+    return decorator
 
-        return decorator
+def get(server:Server, path:str):
+    """A decorator that adds a route to the server. Listens to GET requests.
+    Args:
+        `path (str)`: The path to respond to.
+    """
+    def decorator(func):
+        response:Response = func()
 
-    def post(path:str) -> function:
-        """A decorator that adds a route to the server. Listens to POST requests.
-        Args:
-            `path (str)`: The path to respond to.
-        """
-        def decorator(func:function):
-            ...
-        return decorator
+    return decorator
 
-    def put(path:str) -> function:
-        """A decorator that adds a route to the server. Listens to PUT requests.
-        Args:
-            `path (str)`: The path to respond to.
-        """
-        def decorator(func:function):
-            ...
-        return decorator
+def post(server:Server, path:str):
+    """A decorator that adds a route to the server. Listens to POST requests.
+    Args:
+        `path (str)`: The path to respond to.
+    """
+    def decorator(func):
+        ...
+    return decorator
 
-    def delete(path:str) -> function:
-        """A decorator that adds a route to the server. Listens to DELETE requests.
-        Args:
-            `path (str)`: The path to respond to.
-        """
-        def decorator(func:function):
-            ...
-        return decorator
+def put(server:Server, path:str):
+    """A decorator that adds a route to the server. Listens to PUT requests.
+    Args:
+        `path (str)`: The path to respond to.
+    """
+    def decorator(func):
+        ...
+    return decorator
 
-    def patch(path:str) -> function:
-        """A decorator that adds a route to the server. Listens to PATCH requests.
-        Args:
-            `path (str)`: The path to respond to.
-        """
-        def decorator(func:function):
-            ...
-        return decorator
+def delete(server:Server, path:str):
+    """A decorator that adds a route to the server. Listens to DELETE requests.
+    Args:
+        `path (str)`: The path to respond to.
+    """
+    def decorator(func):
+        ...
+    return decorator
 
-    def options(path:str) -> function:
-        """A decorator that adds a route to the server. Listens to OPTIONS requests.
-        Args:
-            `path (str)`: The path to respond to.
-        """
-        def decorator(func:function):
-            ...
-        return decorator
+def patch(server:Server, path:str):
+    """A decorator that adds a route to the server. Listens to PATCH requests.
+    Args:
+        `path (str)`: The path to respond to.
+    """
+    def decorator(func):
+        ...
+    return decorator
+
+def options(server:Server, path:str):
+    """A decorator that adds a route to the server. Listens to OPTIONS requests.
+    Args:
+        `path (str)`: The path to respond to.
+    """
+    def decorator(func):
+        ...
+    return decorator
     
-    def head(path:str) -> function:
-        """A decorator that adds a route to the server. Listens to HEAD requests.
-        Args:
-            `path (str)`: The path to respond to.
-        """
-        def decorator(func:function):
-            ...
-        return decorator
+def head(server:Server, path:str):
+    """A decorator that adds a route to the server. Listens to HEAD requests.
+    Args:
+        `path (str)`: The path to respond to.
+    """
+    def decorator(func):
+        ...
+    return decorator
     
-    def trace(path:str) -> function:
-        """A decorator that adds a route to the server. Listens to TRACE requests.
-        Args:
-            `path (str)`: The path to respond to.
-        """
-        def decorator(func:function):
-            ...
-        return decorator
+def trace(server:Server, path:str):
+    """A decorator that adds a route to the server. Listens to TRACE requests.
+    Args:
+        `path (str)`: The path to respond to.
+    """
+    def decorator(func):
+        ...
+    return decorator
 

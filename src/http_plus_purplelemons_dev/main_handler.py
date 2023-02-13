@@ -7,12 +7,6 @@ from http_plus_purplelemons_dev.static_responses import SEND_RESPONSE_CODE
 class RequestHandler(BaseHTTPRequestHandler):
     def __init__(self, request, client_address, server) -> None:
         """Initializes the request handler."""
-        self.errors_dir = "./errors/"
-        self.pages_dir = "./pages/"
-        self.routes:list[Route] = [
-            Route("/", self.pages_dir, "pages"),
-            Route("/errors/", self.errors_dir, "errors")
-        ]
         self.extension_auto_search = list(TYPES.keys())
         super().__init__(request, client_address, server)
 
@@ -55,19 +49,6 @@ class RequestHandler(BaseHTTPRequestHandler):
             raise RouteExistsError(request_path)
         self.routes.append(Route(request_path, directory, "pages"))
 
-    def resolve_route(self, request_path:str) -> "str|None":
-        """Gets a route from the server.
-
-        Args:
-            `request_path (str)`: The path to respond to.
-
-        Returns:
-            `str`: The directory to respond with in the form of `./path/to/directory/`
-        """
-        for route in self.routes:
-            if route.request_from == request_path:
-                return route.send_to
-        return None
 
     def add_extension(self,extension:str):
         """Adds an extension to the list of extensions to search for when some path containing a file extension is requested.
