@@ -96,6 +96,8 @@ def get(server:Server, path:str):
     """
     def decorator(func):
         response:Response = func()
+        if response.isLinked:
+            ...
 
     return decorator
 
