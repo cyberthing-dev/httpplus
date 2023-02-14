@@ -73,7 +73,7 @@ class Response:
         self.headers = {}
         self.body = b""
         self.status = 200
-        self.linked = False
+        self.isLinked = False
         self._route: Route
 
     def set_header(self, header:str, value:str) -> None:
@@ -108,6 +108,7 @@ class Response:
         if link:
             self.headers["Location"] = path_to
             self.status = 302 # Found == temporary redirect
+            self.isLinked = True
         else:
             self._route = Route(path_to, "pages")
 
