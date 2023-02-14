@@ -71,14 +71,14 @@ class Response:
     def __init__(self, response:BaseHTTPRequestHandler):
         self.response = response
         self.headers = {}
-        self.body = b""
+        self.body:str = ""
         self.status = 200
         self.isLinked = False
         self._route: Route
 
     def set_header(self, header:str, value:str) -> None:
         self.headers[header] = value
-    
+
     def set_body(self, body:bytes|str|dict) -> None:
         """
         Automatically pareses the body into bytes, and sets the Content-Type header to application/json if the body is a dict.
@@ -89,9 +89,9 @@ class Response:
         """
         if isinstance(body, dict):
             self.set_header("Content-Type", "application/json")
-            self.body = dumps(body).encode()
-        elif isinstance(body, str):
-            self.body = body.encode()
+            self.body = dumps(body)
+        elif isinstance(body, bytes):
+            self.body = body.decode()
         else:
             self.body = body
 
