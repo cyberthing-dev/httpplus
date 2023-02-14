@@ -20,13 +20,15 @@ class Handler(BaseHTTPRequestHandler):
         "trace": {}
     }
 
-    @staticmethod
-    def resolve_path(path:str) -> str:
+    def resolve_path(self,method:str,path:str) -> str:
         """
         Returns the content at the path of a *local* url or file.
         For url redirection, use `Response.redirect`.
         """
-        ...
+        for route in self.routes[method]:
+            if route == path:
+                return self.routes[method][route].send_to
+        return path
 
     def do_GET(self):
         for path in self.routes["get"]:
