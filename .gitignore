@@ -4,6 +4,7 @@ secret
 runtest.*
 .vscode
 tests/.venv
+src/http_plus_purplelemons_dev/__pycache__/
 
 # Ignore below because it's not important -- it's a symbolic link to make testing easier
 tests/http_plus_purplelemons_dev
