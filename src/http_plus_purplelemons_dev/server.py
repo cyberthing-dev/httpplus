@@ -154,9 +154,9 @@ class Response:
     """
     def __init__(self, response:BaseHTTPRequestHandler):
         self.response = response
-        self.headers = {}
+        self.headers:dict[str,str] = {}
         self.body:str = ""
-        self.status = 200
+        self.status_code = 200
         self.isLinked = False
         self._route: Route
 
@@ -179,7 +179,16 @@ class Response:
             self.body = body.decode()
         else:
             self.body = body
-        print(f"set body to {self.body}")
+        return self
+
+    def status(self,code:int) -> "Response":
+        """
+        Sets the status code of the response.
+
+        Args:
+            `code (int)`: The status code to set.
+        """
+        self.status_code = code
         return self
 
     def route(self,path_to:str,link:bool=False) -> "Response":
@@ -194,12 +203,23 @@ class Response:
         """
         if link:
             self.headers["Location"] = path_to
-            self.status = 302 # Found == temporary redirect
+            self.status_code = 302 # Found == temporary redirect
             self.isLinked = True
         else:
             self._route = Route(path_to, "pages")
         return self
 
+    def send(self):
+        """
+        Sends the response to the client. You should not call this manually unless you are modifying `server`.
+        """
+        for header, value in self.headers.items():
+            self.response.send_header(header, value)
+        self.response.send_response(self.status_code)
+        self.response.end_headers()
+        if not self.isLinked:
+            self.response.wfile.write(self.body.encode())
+        return
 
 class Handler(BaseHTTPRequestHandler):
     """
@@ -218,7 +238,16 @@ class Handler(BaseHTTPRequestHandler):
         "head": {},
         "trace": {}
     }
-    responses:dict[str,dict[str,]] = routes.copy()
+    responses:dict[str,dict[str,]] = { # I spent 30m trying to debug this because this was originally set to `routes.copy()`. im never using `.copy()` again.
+        "get": {},
+        "post": {},
+        "put": {},
+        "delete": {},
+        "patch": {},
+        "options": {},
+        "head": {},
+        "trace": {}
+    }
     page_dir:str
     error_dir:str
 
@@ -243,7 +272,6 @@ class Handler(BaseHTTPRequestHandler):
             `message (str)`: The message to respond with.
         """
         self.send_response(code)
-        #self.send_header("Content-type", headers["Content-type"])
         for header, value in headers.items():
             self.send_header(header, value)
         self.end_headers()
@@ -268,12 +296,13 @@ class Handler(BaseHTTPRequestHandler):
             #        route = self.routes["get"][route_path]
             #        self.respond_file(200,self.resolve_path("get",route.full_path))
             #        return
-            print(self.path, self.responses, self.routes)
             for func_path in self.responses["get"]:
                 if func_path == self.path:
                     response:Response = self.responses["get"][func_path](Request(self),Response(self))
-                    
+                    response.send()
                     return
+            #else:
+            #    self.respond_file(200,self.resolve_path("get",self.path))
         except Exception as e:
             self.respond(500, str(e), {"Content-type": "text/plain"})
             return
