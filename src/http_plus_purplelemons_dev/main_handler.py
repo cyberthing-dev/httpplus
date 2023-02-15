@@ -10,20 +10,6 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.extension_auto_search = list(TYPES.keys())
         super().__init__(request, client_address, server)
 
-    def respond(self, code:int, message:str, content_type:str="text/plain", headers:dict[str,str]={}) -> None:
-        """Responds to the client with a message custom message. See `respond_file` for the prefered response method.
-
-        Args:
-            `code (int)`: The HTTP status code to respond with.
-            `message (str)`: The message to respond with.
-        """
-        self.send_response(code)
-        self.send_header("Content-type", content_type)
-        for header, value in headers.items():
-            self.send_header(header, value)
-        self.end_headers()
-        self.wfile.write(message.encode())
-
     def respond_file(self, code:int, filename:str) -> None:
         """Responds to the client with a file. The filename (filepath) must be relative to the root directory of the server.
 

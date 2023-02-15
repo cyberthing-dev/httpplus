@@ -14,10 +14,14 @@ class Route:
 
     Attributes:
         `send_to (str)`: The directory to respond with in the form of `./path/to/directory/`, `path/to/file.ext`, etc..
-        `route_type (str)`: The type of route. Can be either `pages` or `errors`.
+        `route_type (str)`: The type of route. Can be either `pages`, `errors`, or `static`.
+        `content (str)`: The content to respond with. Only used for `static` routes.
+        `content_type (str)`: The content type to respond with. Only used for `static` routes.
     """
     send_to:str
     route_type:str
+    content:str
+    content_type:str="text/plain"
 
 class Request:
     """
