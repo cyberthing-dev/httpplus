@@ -23,6 +23,7 @@ You can customize error pages
 """
 
 __dev_version__ = "0.0.3"
+__version__ = __dev_version__
 
 
 # TODO: Add a `-m` script that automatically creates a base directory.
@@ -65,6 +66,7 @@ class Handler(BaseHTTPRequestHandler):
     }
     page_dir:str
     error_dir:str
+    server_version:str = f"http+/{__version__}"
 
     def respond_file(self,code:int,filename:str) -> None:
         """Responds to the client with a file. The filename (filepath) must be relative to the root directory of the server.
