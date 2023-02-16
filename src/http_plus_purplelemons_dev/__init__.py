@@ -180,7 +180,13 @@ class Server:
         """Starts the server, a blocking operation on the current thread."""
         if self.debug:
             print(f"Listening on http://{self.host}:{self.port}")
-        HTTPServer((self.host, self.port), self.handler).serve_forever()
+        try:
+            HTTPServer((self.host, self.port), self.handler).serve_forever()
+        except KeyboardInterrupt:
+            print("Server stopped.")
+        except Exception as e:
+            print(f"Server error: {e}")
+
 
     def base(self, request: Request, response: Response) -> Response:
         """The base function for all routes.
