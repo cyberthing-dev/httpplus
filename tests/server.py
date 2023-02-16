@@ -9,7 +9,7 @@
 #
 #server.listen()
 
-import http_plus_purplelemons_dev.server as http_plus
+import http_plus_purplelemons_dev as http_plus
 from datetime import datetime
 
 server = http_plus.Server("0.0.0.0", 80, debug=True)
