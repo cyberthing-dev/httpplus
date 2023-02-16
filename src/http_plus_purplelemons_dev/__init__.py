@@ -314,11 +314,3 @@ def trace(server:Server, path:str):
     def decorator(func):
         server.handler.responses["trace"][path] = func
     return decorator
-
-# TODO move this to .server
-if __name__=="__main__":
-    server = Server("localhost", 8080, debug=True)
-    @all(server, "/")
-    def _(req:Request, res:Response):
-        return res.set_body("Hello, world!")
-    server.listen()

@@ -1,0 +1,22 @@
+
+"""
+Currently only supports commandline usage. Do not use this for programming servers.
+Usage:
+    `$ python -m http_plus_purplelemons_dev`
+"""
+
+
+if __name__=="__main__":
+    import http_plus_purplelemons_dev as http_plus
+    import argparse
+
+    parser = argparse.ArgumentParser(description="A simple HTTP server.")
+    parser.add_argument("-p", "--port", type=int, default=8080, help="The port to listen on.")
+    parser.add_argument("-d", "--debug", action="store_true", help="Enables debug mode.")
+    args = parser.parse_args()
+
+    server = http_plus.Server("0.0.0.0", args.port, debug=args.debug)
+    @http_plus.get(server, "/")
+    def _(req:http_plus.Request, res:http_plus.Response):
+        return res.set_body("Hello, world!")
+    server.listen()
