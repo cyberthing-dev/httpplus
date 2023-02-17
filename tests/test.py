@@ -1,12 +1,8 @@
 
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from socketserver import BaseRequestHandler, TCPServer
 
-class RequestHandler(BaseHTTPRequestHandler):
+class handler(BaseRequestHandler):
+    def handle(self):
+        print(self.request.recv(1024))
 
-    def do_GET(self):
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b"Hello, world!")
-
-server = HTTPServer(("0.0.0.0", 8080), RequestHandler)
-server.serve_forever()
+server=TCPServer(("localhost", 8080), handler).serve_forever()
