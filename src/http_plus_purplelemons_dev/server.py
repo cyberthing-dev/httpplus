@@ -3,7 +3,7 @@ from .types import Method, Headers, Request, Body
 import socketserver
 import socket
 
-class handler(socketserver.BaseRequestHandler):
+class Handler(socketserver.BaseRequestHandler):
 
     request:socket.socket
     method:Method
@@ -21,7 +21,8 @@ class handler(socketserver.BaseRequestHandler):
         self.headers=Headers(raw.split(b"\r\n\r\n")[0].split(b"\r\n")[1:])
         # above code (except for recv) runs at about 10.6 micro seconds.
 
-        
+
+
 
 # Notes:
 # This is the socket branch of httpplus. The goal is to provide at least same functions that the main branch does, hopefully more.
