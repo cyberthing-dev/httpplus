@@ -229,4 +229,3 @@ def _511(path:str="") -> str:
     """Returns the HTML for the 511 error page."""
     message = f'"{path}"' if path else "The page you were looking for"
     return generate_html(511,"Network Authentication Required",f"{message} requires <em>network</em> authentication to access.")
-
