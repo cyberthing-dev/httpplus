@@ -35,7 +35,9 @@ __version__ = __dev_version__
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from .content_types import detect_content_type
+from os.path import exists
 from .communications import Route, RouteExistsError, Request, Response
+from .static_responses import SEND_RESPONSE_CODE
 
 class Handler(BaseHTTPRequestHandler):
     """
@@ -68,6 +70,13 @@ class Handler(BaseHTTPRequestHandler):
     error_dir:str
     server_version:str = f"http+/{__version__}"
 
+    def error(self,code:int, *, message:str=None, headers:dict[str,str]=None) -> None:
+        page_path = f"{self.error_dir}/{code}/.html"
+        if exists(page_path):
+            self.respond_file(code, page_path)
+        else:
+            self.respond(code,SEND_RESPONSE_CODE(code,message),headers)
+
     def respond_file(self,code:int,filename:str) -> None:
         """Responds to the client with a file. The filename (filepath) must be relative to the root directory of the server.
 
@@ -76,7 +85,7 @@ class Handler(BaseHTTPRequestHandler):
             `filename (str)`: The file to respond with.
         """
         self.send_response(code)
-        self.send_header("Content-type", content_types.detect_content_type(filename))
+        self.send_header("Content-type", detect_content_type(filename))
         self.end_headers()
         with open(filename, "rb") as f:
             self.wfile.write(f.read())
@@ -89,10 +98,12 @@ class Handler(BaseHTTPRequestHandler):
             `message (str)`: The message to respond with.
         """
         self.send_response(code)
-        for header, value in headers.items():
-            self.send_header(header, value)
+        if headers:
+            for header, value in headers.items():
+                self.send_header(header, value)
         self.end_headers()
-        self.wfile.write(message.encode())
+        if message:
+            self.wfile.write(message.encode())
 
     def resolve_path(self,method:str,path:str) -> str:
         """
@@ -108,18 +119,19 @@ class Handler(BaseHTTPRequestHandler):
         """GET requests. Do not modify unless you know what you are doing.
         Use the `@server.get(path)` decorator instead."""
         try:
-            #for route_path in self.routes["get"]:
-            #    if route_path == self.path:
-            #        route = self.routes["get"][route_path]
-            #        self.respond_file(200,self.resolve_path("get",route.full_path))
-            #        return
+            for route_path in self.routes["get"]:
+                if route_path == self.path:
+                    route = self.routes["get"][route_path]
+                    print(f"Given {self.path}, redirecting to {route.full_path}")
+                    self.respond_file(200,self.resolve_path("get",route.full_path))
+                    return
             for func_path in self.responses["get"]:
                 if func_path == self.path:
                     response:Response = self.responses["get"][func_path](Request(self),Response(self))
                     response.send()
                     return
-            #else:
-            #    self.respond_file(200,self.resolve_path("get",self.path))
+            else:
+                self.error(404, message=self.path)
         except Exception as e:
             self.respond(500, str(e), {"Content-type": "text/plain"})
             return
@@ -162,7 +174,7 @@ class Server:
         for example `@httpplus.server.get("/")`.
     """
 
-    def __init__(self, host:str, port:int, *, page_dir:str="./pages/", error_dir="./errors/", debug:bool=False, **kwargs):
+    def __init__(self, host:str, port:int, *, page_dir:str="./pages", error_dir="./errors", debug:bool=False, **kwargs):
         """Initializes the server.
         Args:
             `host (str)`: The host to listen on.
