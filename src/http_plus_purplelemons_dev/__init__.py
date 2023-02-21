@@ -22,7 +22,7 @@ In order to access /, the server will look for ./pages/.html. Smiliar thing for 
 You can customize error pages 
 """
 
-__dev_version__ = "0.0.3"
+__dev_version__ = "0.0.5"
 __version__ = __dev_version__
 
 
@@ -38,6 +38,7 @@ from .content_types import detect_content_type
 from os.path import exists
 from .communications import Route, RouteExistsError, Request, Response
 from .static_responses import SEND_RESPONSE_CODE
+from traceback import print_exception as print_exc
 
 class Handler(BaseHTTPRequestHandler):
     """
@@ -71,9 +72,9 @@ class Handler(BaseHTTPRequestHandler):
     server_version:str = f"http+/{__version__}"
 
     def error(self,code:int, *, message:str=None, headers:dict[str,str]=None) -> None:
-        page_path = f"{self.error_dir}/{code}/.html"
-        if exists(page_path):
-            self.respond_file(code, page_path)
+        error_page_path = f"{self.error_dir}/{code}/.html"
+        if exists(error_page_path):
+            self.respond_file(code, error_page_path)
         else:
             self.respond(code,SEND_RESPONSE_CODE(code,message),headers)
 
@@ -115,6 +116,22 @@ class Handler(BaseHTTPRequestHandler):
                 return self.routes[method][route].send_to
         return path
 
+    @staticmethod
+    def match_route(path:str, route:str) -> tuple[bool,dict[str,str]]:
+        if len(path.split("/")) == len(route.split("/")):
+            temp={}
+            for path_part, route_part in zip(path.split("/"), route.split("/")):
+                if route_part.startswith(":"):
+                    temp[route_part[1:]] = path_part
+                elif route_part == "*":
+                    # TODO: Implement further wildcard matching
+                    pass
+                elif route_part != path_part:
+                    break
+            else:
+                return True, temp
+        return False, {}
+
     def do_GET(self):
         """GET requests. Do not modify unless you know what you are doing.
         Use the `@server.get(path)` decorator instead."""
@@ -122,21 +139,23 @@ class Handler(BaseHTTPRequestHandler):
             for route_path in self.routes["get"]:
                 if route_path == self.path:
                     route = self.routes["get"][route_path]
-                    print(f"Given {self.path}, redirecting to {route.full_path}")
+                    #print(f"Given {self.path}, redirecting to {route.full_path}")
                     self.respond_file(200,self.resolve_path("get",route.full_path))
                     return
             for func_path in self.responses["get"]:
-                if func_path == self.path:
-                    response:Response = self.responses["get"][func_path](Request(self),Response(self))
+                matched, kwargs = self.match_route(self.path, func_path)
+                if matched:
+                    response:Response = self.responses["get"][func_path](Request(self),Response(self),**kwargs)
                     response.send()
                     return
             else:
                 self.error(404, message=self.path)
         except Exception as e:
+            print_exc(e)
             self.respond(500, str(e), {"Content-type": "text/plain"})
             return
-            
-            
+
+
     def do_POST(self):
         """POST requests. Do not modify unless you know what you are doing.
         Use the `@server.post(path)` decorator instead."""
@@ -171,7 +190,7 @@ class Server:
     Main class for the HTTP Plus server library.
     * Initialize the server with `server = Server(host, port)`.
     * Listen to HTTP methods with `@httpplus.server.<method>(server,path)`,
-        for example `@httpplus.server.get("/")`.
+        for example `@httpplus.get("/")`.
     """
 
     def __init__(self, host:str, port:int, *, page_dir:str="./pages", error_dir="./errors", debug:bool=False, **kwargs):
@@ -191,7 +210,7 @@ class Server:
         self.handler.error_dir = error_dir
 
     def listen(self) -> None:
-        """Starts the server, a blocking operation on the current thread."""
+        """Starts the server, a blocking loop on the current thread."""
         if self.debug:
             print(f"Listening on http://{self.host}:{self.port}")
         try:
@@ -202,11 +221,12 @@ class Server:
             print(f"Server error: {e}")
 
 
-    def base(self, request: Request, response: Response) -> Response:
+    def base(self, request: Request, response: Response, **kwargs) -> Response:
         """The base function for all routes.
         Args:
             `request (Request)`: The request object.
             `response (Response)`: The response object.
+            `**kwargs`: Arguments passed in by the route (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
         """
         return response
 
