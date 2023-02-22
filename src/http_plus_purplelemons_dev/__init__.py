@@ -22,7 +22,7 @@ In order to access /, the server will look for ./pages/.html. Smiliar thing for 
 You can customize error pages 
 """
 
-__dev_version__ = "0.0.5"
+__dev_version__ = "0.0.6"
 __version__ = __dev_version__
 
 
@@ -32,6 +32,14 @@ __version__ = __dev_version__
 # TODO: Add configure error pages to include f"https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/{code}"
 # for errors in the 4XX-5XX range.
 
+# TODO: Add a `@route` decorator that can be used to register a route.
+
+# TODO: Add `debug=True` mode to decorators for routes and responses.
+
+# TODO: Allow datatype checking in route and response uri (example below)
+# @route("/example/:<var>:<type>")
+# If the type is not specified, it will default to `str`. If the type is violated, it will return a 400 "expected <type> for <var>" error.
+# Valid types should be str, bool, int, float, bin, and hex.
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from .content_types import detect_content_type
@@ -145,7 +153,7 @@ class Handler(BaseHTTPRequestHandler):
             for func_path in self.responses["get"]:
                 matched, kwargs = self.match_route(self.path, func_path)
                 if matched:
-                    response:Response = self.responses["get"][func_path](Request(self),Response(self),**kwargs)
+                    response:Response = self.responses["get"][func_path](Request(self, params=kwargs),Response(self))
                     response.send()
                     return
             else:
@@ -193,11 +201,11 @@ class Server:
         for example `@httpplus.get("/")`.
     """
 
-    def __init__(self, host:str, port:int, *, page_dir:str="./pages", error_dir="./errors", debug:bool=False, **kwargs):
+    def __init__(self, host:str="0.0.0.0", port:int=80, /, *, page_dir:str="./pages", error_dir="./errors", debug:bool=False, **kwargs):
         """Initializes the server.
         Args:
-            `host (str)`: The host to listen on.
-            `port (int)`: The port to listen on.
+            `host (str)`: The host to listen on. Defaults to all interfaces.
+            `port (int)`: The port to listen on. Defaults to 80.
             `page_dir (str)`: The directory to serve pages from.
             `error_dir (str)`: The directory to serve error pages from.
             `debug (bool)`: Whether or not to print debug messages.
