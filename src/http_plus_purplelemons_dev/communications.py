@@ -34,13 +34,40 @@ class Request:
     """
     Request object, passed into HTTP method listeners as the first argument.
     """
-    def __init__(self, request:BaseHTTPRequestHandler):
+    class Params:
+        """
+        Accessed from `Request.params`.
+        
+        Given the route `/example/:id`, you may use `Request.params.id`.
+        However, if the route is `/example/example-id`, then you must use either
+        `Request.params["example-id"]` or `Request.params.get("example-id")`.
+        """
+        def __init__(self, kwargs:dict[str,str]):
+            for param, value in kwargs.items():
+                # Fun fact, setattr is ~39% faster than __setattr__.
+                setattr(self, param, value)
+        
+        def __getitem__(self, key:str) -> str:
+            return getattr(self, key)
+        def get(self, param:str) -> str:
+            return getattr(self, param)
+        def __repr__(self) -> str:
+            return f"Request.params({self.__dict__})"
+        def __str__(self) -> str:
+            return self.__repr__()
+        def __eq__(self, o:object) -> bool:
+            if isinstance(o, Request.params):
+                return self.__repr__() == o.__repr__()
+            return False
+
+    def __init__(self, request:BaseHTTPRequestHandler, /, *, params:dict[str,str]):
         self.request = request
         self.path = request.path
         self.method = request.command
         self.headers = request.headers
         self.body = request.rfile.read(int(request.headers.get("Content-Length", 0)))
         self.ip, self.port = request.client_address
+        self.params = self.Params(params)
 
     # Dunder pog
     def __repr__(self) -> str:
@@ -74,6 +101,9 @@ class Request:
     @property
     def text(self) -> str:
         return self.body.decode()
+    
+    def param(self, param:str) -> str:
+        return self.params[param]
 
 
 class Response:

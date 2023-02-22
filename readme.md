@@ -4,7 +4,9 @@ hi welcome to http plus. It's a high-level, dynamic HTTP server for Python. Quic
 high-performance ones.
 
 ## Version
-Development version 0.0.5
+Development version 0.0.6
+
+(go check the [changelog](./changelog.md) for more info on versions plz i worked hard on it thx)
 
 # Future plans
 - [ ] HTTPS
@@ -14,3 +16,4 @@ Development version 0.0.5
 - [ ] Config file support?
 
 [//]: # (TODO: add more stuff here)
+[//]: # (TODO: Automate version number update with github actions)
