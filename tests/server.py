@@ -22,6 +22,13 @@ def _(req:http_plus.Request, res:http_plus.Response):
 def _(req:http_plus.Request, res:http_plus.Response):
     return res.set_body("Hello, .../*/test!")
 
+@http_plus.post(server, "/posty")
+def _(req:http_plus.Request, res:http_plus.Response):
+    res.set_header("Content-Type", "text/html")
+    return res.set_body("\n".join(f"{k}: {v}" for k, v in req.json.items()))
 
+@http_plus.all(server, "/all")
+def _(req:http_plus.Request, res:http_plus.Response):
+    return res.set_body("Hello, all methods!")
 
 server.listen()

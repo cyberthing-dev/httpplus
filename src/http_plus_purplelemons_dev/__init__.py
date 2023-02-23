@@ -22,7 +22,7 @@ In order to access /, the server will look for ./pages/.html. Smiliar thing for 
 You can customize error pages 
 """
 
-__dev_version__ = "0.0.6"
+__dev_version__ = "0.0.7"
 __version__ = __dev_version__
 
 
@@ -40,6 +40,11 @@ __version__ = __dev_version__
 # @route("/example/:<var>:<type>")
 # If the type is not specified, it will default to `str`. If the type is violated, it will return a 400 "expected <type> for <var>" error.
 # Valid types should be str, bool, int, float, bin, and hex.
+
+# TODO: Add HTML object for response bodies.
+# HTML.body, .head, .render(**kwargs), etc.
+
+# TODO: Add .match_route check to adding new routes, currently wildcard routes will conflict with other routes.
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from .content_types import detect_content_type
@@ -167,30 +172,163 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         """POST requests. Do not modify unless you know what you are doing.
         Use the `@server.post(path)` decorator instead."""
+        try:
+            for route_path in self.routes["post"]:
+                if route_path == self.path:
+                    route = self.routes["post"][route_path]
+                    #print(f"Given {self.path}, redirecting to {route.full_path}")
+                    self.respond_file(200,self.resolve_path("post",route.full_path))
+                    return
+            for func_path in self.responses["post"]:
+                matched, kwargs = self.match_route(self.path, func_path)
+                if matched:
+                    response:Response = self.responses["post"][func_path](Request(self, params=kwargs),Response(self))
+                    response.send()
+                    return
+            else:
+                self.error(404, message=self.path)
+        except Exception as e:
+            print_exc(e)
+            self.respond(500, str(e), {"Content-type": "text/plain"})
+            return
 
     def do_PUT(self):
         """PUT requests. Do not modify unless you know what you are doing.
         Use the `@server.put(path)` decorator instead."""
+        try:
+            for route_path in self.routes["put"]:
+                if route_path == self.path:
+                    route = self.routes["put"][route_path]
+                    #print(f"Given {self.path}, redirecting to {route.full_path}")
+                    self.respond_file(200,self.resolve_path("put",route.full_path))
+                    return
+            for func_path in self.responses["put"]:
+                matched, kwargs = self.match_route(self.path, func_path)
+                if matched:
+                    response:Response = self.responses["put"][func_path](Request(self, params=kwargs),Response(self))
+                    response.send()
+                    return
+            else:
+                self.error(404, message=self.path)
+        except Exception as e:
+            print_exc(e)
+            self.respond(500, str(e), {"Content-type": "text/plain"})
+            return
 
     def do_DELETE(self):
         """DELETE requests. Do not modify unless you know what you are doing.
         Use the `@server.delete(path)` decorator instead."""
+        try:
+            for route_path in self.routes["delete"]:
+                if route_path == self.path:
+                    route = self.routes["delete"][route_path]
+                    #print(f"Given {self.path}, redirecting to {route.full_path}")
+                    self.respond_file(200,self.resolve_path("delete",route.full_path))
+                    return
+            for func_path in self.responses["delete"]:
+                matched, kwargs = self.match_route(self.path, func_path)
+                if matched:
+                    response:Response = self.responses["delete"][func_path](Request(self, params=kwargs),Response(self))
+                    response.send()
+                    return
+            else:
+                self.error(404, message=self.path)
+        except Exception as e:
+            print_exc(e)
+            self.respond(500, str(e), {"Content-type": "text/plain"})
+            return
 
     def do_PATCH(self):
         """PATCH requests. Do not modify unless you know what you are doing.
         Use the `@server.patch(path)` decorator instead."""
+        try:
+            for route_path in self.routes["patch"]:
+                if route_path == self.path:
+                    route = self.routes["patch"][route_path]
+                    #print(f"Given {self.path}, redirecting to {route.full_path}")
+                    self.respond_file(200,self.resolve_path("patch",route.full_path))
+                    return
+            for func_path in self.responses["patch"]:
+                matched, kwargs = self.match_route(self.path, func_path)
+                if matched:
+                    response:Response = self.responses["patch"][func_path](Request(self, params=kwargs),Response(self))
+                    response.send()
+                    return
+            else:
+                self.error(404, message=self.path)
+        except Exception as e:
+            print_exc(e)
+            self.respond(500, str(e), {"Content-type": "text/plain"})
+            return
 
     def do_OPTIONS(self):
         """OPTIONS requests. Do not modify unless you know what you are doing.
         Use the `@server.options(path)` decorator instead."""
+        try:
+            for route_path in self.routes["options"]:
+                if route_path == self.path:
+                    route = self.routes["options"][route_path]
+                    #print(f"Given {self.path}, redirecting to {route.full_path}")
+                    self.respond_file(200,self.resolve_path("options",route.full_path))
+                    return
+            for func_path in self.responses["options"]:
+                matched, kwargs = self.match_route(self.path, func_path)
+                if matched:
+                    response:Response = self.responses["options"][func_path](Request(self, params=kwargs),Response(self))
+                    response.send()
+                    return
+            else:
+                self.error(404, message=self.path)
+        except Exception as e:
+            print_exc(e)
+            self.respond(500, str(e), {"Content-type": "text/plain"})
+            return
 
     def do_HEAD(self):
         """HEAD requests. Do not modify unless you know what you are doing.
         Use the `@server.head(path)` decorator instead."""
+        try:
+            for route_path in self.routes["head"]:
+                if route_path == self.path:
+                    route = self.routes["head"][route_path]
+                    #print(f"Given {self.path}, redirecting to {route.full_path}")
+                    self.respond_file(200,self.resolve_path("head",route.full_path))
+                    return
+            for func_path in self.responses["head"]:
+                matched, kwargs = self.match_route(self.path, func_path)
+                if matched:
+                    response:Response = self.responses["head"][func_path](Request(self, params=kwargs),Response(self))
+                    response.send()
+                    return
+            else:
+                self.error(404, message=self.path)
+        except Exception as e:
+            print_exc(e)
+            self.respond(500, str(e), {"Content-type": "text/plain"})
+            return
 
     def do_TRACE(self):
         """TRACE requests. Do not modify unless you know what you are doing.
         Use the `@server.trace(path)` decorator instead."""
+        try:
+            for route_path in self.routes["trace"]:
+                if route_path == self.path:
+                    route = self.routes["trace"][route_path]
+                    #print(f"Given {self.path}, redirecting to {route.full_path}")
+                    self.respond_file(200,self.resolve_path("trace",route.full_path))
+                    return
+            for func_path in self.responses["trace"]:
+                matched, kwargs = self.match_route(self.path, func_path)
+                if matched:
+                    response:Response = self.responses["trace"][func_path](Request(self, params=kwargs),Response(self))
+                    response.send()
+                    return
+            else:
+                self.error(404, message=self.path)
+        except Exception as e:
+            print_exc(e)
+            self.respond(500, str(e), {"Content-type": "text/plain"})
+            return
 
 
 class Server:
@@ -248,17 +386,9 @@ def all(server:Server, path:str):
             and specify it in method decorators.
         `path (str)`: The path to respond to.
     """
-    # This code is very clever if i do say so myself
-    @get(server, path)
-    @post(server, path)
-    @put(server, path)
-    @delete(server, path)
-    @patch(server, path)
-    @options(server, path)
-    @head(server, path)
-    @trace(server, path)
     def decorator(func):
-        return func
+        for method in server.handler.responses:
+            server.handler.responses[method][path] = func
     return decorator
 
 def get(server:Server, path:str):

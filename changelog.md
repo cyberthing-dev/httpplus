@@ -8,6 +8,12 @@ Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-5/-6. 
 ## Developmental (0.0.X)
 2023/01/16-
 
+### v0.0.7 (2023/02/22 21:18)
+* Added listner logic to all methods (originally ony `@http_plus.get()` listened).
+* Fixed `@http_plus.all()` because evidently i forgot to check if it was working.
+* Added more todos.
+* Updated the [test server](./tests/server.py) to test 0.0.7 features.
+
 ### v0.0.6 (2023/02/22 01:10)
 * Added changelog
 * Aded TODOs to [main module file](./src/http_plus_purplelemons_dev/__init__.py).
