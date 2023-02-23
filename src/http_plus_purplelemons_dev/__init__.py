@@ -375,6 +375,28 @@ class Server:
         return response
 
 
+def init():
+    """Initializes the current directory for HTTP+"""
+    import os
+    if not os.path.exists("pages"):
+        os.mkdir("pages")
+    if not os.path.exists("errors"):
+        os.mkdir("errors")
+    if not os.path.exists("server.py"):
+        with open("server.py", "w") as f:
+            print("""
+import http_plus
+
+server = http_plus.Server()
+
+@http_plus.get(server,"/")
+def _(req:http_plus.Request, res:http_plus.Response):
+    res.set_header("Content-type", "text/html")
+    return res.set_body("<h2>Hello, world!</h2>")
+
+server.listen()
+""", file=f)
+
 ### DECORATORS == boilerplate :( ###
 def all(server:Server, path:str):
     """A decorator that adds a route to the server. Listens to all HTTP methods.
