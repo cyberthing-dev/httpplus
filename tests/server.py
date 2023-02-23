@@ -31,4 +31,8 @@ def _(req:http_plus.Request, res:http_plus.Response):
 def _(req:http_plus.Request, res:http_plus.Response):
     return res.set_body("Hello, all methods!")
 
+@http_plus.get(server, "/error_test")
+def _(req:http_plus.Request, res:http_plus.Response):
+    raise Exception("This is an error test, completely normal stuff dont worry lol why are you worrying i said stop worrying stop crying why are you crying this is normal.")
+
 server.listen()
