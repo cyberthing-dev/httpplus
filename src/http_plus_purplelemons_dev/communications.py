@@ -109,7 +109,8 @@ class Request:
 class Response:
     """
     Response object, passed into HTTP method listeners as the second argument.
-    You must return this from the HTTP method listener function.
+    
+    You *must* return this from the HTTP method listener function.
     """
     def __init__(self, response:BaseHTTPRequestHandler):
         self.response = response
