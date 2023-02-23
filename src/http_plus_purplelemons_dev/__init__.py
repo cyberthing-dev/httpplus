@@ -29,8 +29,9 @@ __version__ = __dev_version__
 # TODO: Add a `-m` script that automatically creates a base directory.
 # ^ either that or serve pre-defined responses from hardcoded text
 
-# TODO: Add configure error pages to include f"https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/{code}"
+# XTODO: Add configure error pages to include f"https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/{code}"
 # for errors in the 4XX-5XX range.
+# TODO: Use http code cat for default errors instead of what's currently going on.
 
 # TODO: Add a `@route` decorator that can be used to register a route.
 

@@ -9,7 +9,7 @@ Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-5/-6. 
 2023/01/16-
 
 ### v0.0.7 (2023/02/22 21:18)
-* Added listner logic to all methods (originally ony `@http_plus.get()` listened).
+* Added listner logic to all methods (originally only `@http_plus.get()` listened).
 * Fixed `@http_plus.all()` because evidently i forgot to check if it was working.
 * Added more todos.
 * Updated the [test server](./tests/server.py) to test 0.0.7 features.
