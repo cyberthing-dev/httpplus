@@ -22,13 +22,9 @@ In order to access /, the server will look for ./pages/.html. Smiliar thing for 
 You can customize error pages 
 """
 
-__dev_version__ = "0.0.8"
+__dev_version__ = "0.0.9"
 __version__ = __dev_version__
 
-
-# XTODO: Add configure error pages to include f"https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/{code}"
-# for errors in the 4XX-5XX range.
-# TODO: Use http code cat for default errors instead of what's currently going on.
 
 # TODO: Add a `@route` decorator that can be used to register a route.
 
@@ -43,6 +39,10 @@ __version__ = __dev_version__
 # HTML.body, .head, .render(**kwargs), etc.
 
 # TODO: Add .match_route check to adding new routes, currently wildcard routes will conflict with other routes.
+
+# TODO: SEND_RESPONSE_CODE to accept debug:bool (maybe traceback:bool?) to know whether to print the traceback or not.
+
+# TODO: SEND_RESPONSE_CODE to send error code and title in <h1> and other info in <p>.
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from .content_types import detect_content_type
@@ -82,12 +82,13 @@ class Handler(BaseHTTPRequestHandler):
     error_dir:str
     server_version:str = f"http+/{__version__}"
 
-    def error(self,code:int, *, message:str=None, headers:dict[str,str]=None) -> None:
+    def error(self,code:int, *, message:str=None, headers:dict[str,str]=None, **kwargs) -> None:
         error_page_path = f"{self.error_dir}/{code}/.html"
         if exists(error_page_path):
             self.respond_file(code, error_page_path)
         else:
-            self.respond(code,SEND_RESPONSE_CODE(code,message),headers)
+            print(f"Error {code} occured, but no error page was found at {error_page_path}.")
+            self.respond(code,SEND_RESPONSE_CODE(code,message,**kwargs),headers)
 
     def respond_file(self,code:int,filename:str) -> None:
         """Responds to the client with a file. The filename (filepath) must be relative to the root directory of the server.
@@ -163,7 +164,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.error(404, message=self.path)
         except Exception as e:
             print_exc(e)
-            self.respond(500, str(e), {"Content-type": "text/plain"})
+            self.error(500, message=str(e))
             return
 
 
@@ -187,7 +188,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.error(404, message=self.path)
         except Exception as e:
             print_exc(e)
-            self.respond(500, str(e), {"Content-type": "text/plain"})
+            self.error(500, message=str(e))
             return
 
     def do_PUT(self):
@@ -210,7 +211,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.error(404, message=self.path)
         except Exception as e:
             print_exc(e)
-            self.respond(500, str(e), {"Content-type": "text/plain"})
+            self.error(500, message=str(e))
             return
 
     def do_DELETE(self):
@@ -233,7 +234,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.error(404, message=self.path)
         except Exception as e:
             print_exc(e)
-            self.respond(500, str(e), {"Content-type": "text/plain"})
+            self.error(500, message=str(e))
             return
 
     def do_PATCH(self):
@@ -256,7 +257,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.error(404, message=self.path)
         except Exception as e:
             print_exc(e)
-            self.respond(500, str(e), {"Content-type": "text/plain"})
+            self.error(500, message=str(e))
             return
 
     def do_OPTIONS(self):
@@ -279,7 +280,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.error(404, message=self.path)
         except Exception as e:
             print_exc(e)
-            self.respond(500, str(e), {"Content-type": "text/plain"})
+            self.error(500, message=str(e))
             return
 
     def do_HEAD(self):
@@ -302,7 +303,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.error(404, message=self.path)
         except Exception as e:
             print_exc(e)
-            self.respond(500, str(e), {"Content-type": "text/plain"})
+            self.error(500, message=self.path, exception=e)
             return
 
     def do_TRACE(self):
@@ -325,7 +326,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.error(404, message=self.path)
         except Exception as e:
             print_exc(e)
-            self.respond(500, str(e), {"Content-type": "text/plain"})
+            self.error(500, message=str(e))
             return
 
 
@@ -337,7 +338,7 @@ class Server:
         for example `@httpplus.get("/")`.
     """
 
-    def __init__(self, host:str="0.0.0.0", port:int=80, /, *, page_dir:str="./pages", error_dir="./errors", debug:bool=False, **kwargs):
+    def __init__(self, host:str="127.0.0.1", port:int=8080, /, *, page_dir:str="./pages", error_dir="./errors", debug:bool=False, **kwargs):
         """Initializes the server.
         Args:
             `host (str)`: The host to listen on. Defaults to all interfaces.

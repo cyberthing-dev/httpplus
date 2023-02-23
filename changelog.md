@@ -8,6 +8,13 @@ Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-5/-6. 
 ## Developmental (0.0.X)
 2023/01/16-
 
+### v0.0.9 (2023/02/23 17:15)
+* Default error pages now include http code cat!
+* `http.Server()` binding now defaults to `127.0.0.1:8080` in accordance with the `http_plus.server` module script defaults.
+* `Handler.error()` now sends the error traceback to the page.
+* [tests/server.py](./tests/server.py) now has a test for the error page demonstration.
+* Updated TODOs... again...
+
 ### v0.0.8 (2023/02/23 12:33)
 * Added `http_plus.init()` which initializes the current directory for HTTP+
 * `@http_plus.<method>()` now raises `RouteExistsError` if `path` already exists for the given method.
