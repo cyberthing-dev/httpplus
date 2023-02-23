@@ -8,6 +8,12 @@ Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-5/-6. 
 ## Developmental (0.0.X)
 2023/01/16-
 
+### v0.0.8 (2023/02/23 12:33)
+* Added `http_plus.init()` which initializes the current directory for HTTP+
+* `@http_plus.<method>()` now raises `RouteExistsError` if `path` already exists for the given method.
+* `@http_plus.all()` is now more code efficient and looks cleaner pogchamp.
+* Fixed some comment format errors.
+
 ### v0.0.7 (2023/02/22 21:18)
 * Added listner logic to all methods (originally only `@http_plus.get()` listened).
 * Fixed `@http_plus.all()` because evidently i forgot to check if it was working.

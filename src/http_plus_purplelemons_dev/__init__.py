@@ -22,12 +22,9 @@ In order to access /, the server will look for ./pages/.html. Smiliar thing for 
 You can customize error pages 
 """
 
-__dev_version__ = "0.0.7"
+__dev_version__ = "0.0.8"
 __version__ = __dev_version__
 
-
-# TODO: Add a `-m` script that automatically creates a base directory.
-# ^ either that or serve pre-defined responses from hardcoded text
 
 # XTODO: Add configure error pages to include f"https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/{code}"
 # for errors in the 4XX-5XX range.
@@ -58,7 +55,7 @@ class Handler(BaseHTTPRequestHandler):
     """
     A proprietary HTTP request handler for the server.
     It is highly suggested that you have a good understanding of
-        http.server and httpplus before modifying or substituting this class.
+    `http.server` and httpplus before modifying or substituting this class.
     """
 
     routes:dict[str,dict[str,Route]] = {
@@ -388,8 +385,11 @@ def all(server:Server, path:str):
         `path (str)`: The path to respond to.
     """
     def decorator(func):
-        for method in server.handler.responses:
-            server.handler.responses[method][path] = func
+        for method in (get, post, put, delete, options, head, trace):
+            try:
+                method(server, path)(func)
+            except KeyError:
+                raise RouteExistsError(path)
     return decorator
 
 def get(server:Server, path:str):
@@ -401,7 +401,10 @@ def get(server:Server, path:str):
         `path (str)`: The path to respond to.
     """
     def decorator(func):
-        server.handler.responses["get"][path] = func
+        try:
+            server.handler.responses["get"][path] = func
+        except KeyError:
+            raise RouteExistsError(path)
     return decorator
 
 def post(server:Server, path:str):
@@ -413,7 +416,10 @@ def post(server:Server, path:str):
         `path (str)`: The path to respond to.
     """
     def decorator(func):
-        server.handler.responses["post"][path] = func
+        try:
+            server.handler.responses["post"][path] = func
+        except KeyError:
+            raise RouteExistsError(path)
     return decorator
 
 def put(server:Server, path:str):
@@ -425,7 +431,10 @@ def put(server:Server, path:str):
         `path (str)`: The path to respond to.
     """
     def decorator(func):
-        server.handler.responses["put"][path] = func
+        try:
+            server.handler.responses["put"][path] = func
+        except KeyError:
+            raise RouteExistsError(path)
     return decorator
 
 def delete(server:Server, path:str):
@@ -437,7 +446,10 @@ def delete(server:Server, path:str):
         `path (str)`: The path to respond to.
     """
     def decorator(func):
-        server.handler.responses["delete"][path] = func
+        try:
+            server.handler.responses["delete"][path] = func
+        except KeyError:
+            raise RouteExistsError(path)
     return decorator
 
 def patch(server:Server, path:str):
@@ -449,7 +461,10 @@ def patch(server:Server, path:str):
         `path (str)`: The path to respond to.
     """
     def decorator(func):
-        server.handler.responses["patch"][path] = func
+        try:
+            server.handler.responses["patch"][path] = func
+        except KeyError:
+            raise RouteExistsError(path)
     return decorator
 
 def options(server:Server, path:str):
@@ -461,7 +476,10 @@ def options(server:Server, path:str):
         `path (str)`: The path to respond to.
     """
     def decorator(func):
-        server.handler.responses["options"][path] = func
+        try:
+            server.handler.responses["options"][path] = func
+        except KeyError:
+            raise RouteExistsError(path)
     return decorator
     
 def head(server:Server, path:str):
@@ -473,7 +491,10 @@ def head(server:Server, path:str):
         `path (str)`: The path to respond to.
     """
     def decorator(func):
-        server.handler.responses["head"][path] = func
+        try:
+            server.handler.responses["head"][path] = func
+        except KeyError:
+            raise RouteExistsError(path)
     return decorator
     
 def trace(server:Server, path:str):
@@ -485,5 +506,8 @@ def trace(server:Server, path:str):
         `path (str)`: The path to respond to.
     """
     def decorator(func):
-        server.handler.responses["trace"][path] = func
+        try:
+            server.handler.responses["trace"][path] = func
+        except KeyError:
+            raise RouteExistsError(path)
     return decorator
