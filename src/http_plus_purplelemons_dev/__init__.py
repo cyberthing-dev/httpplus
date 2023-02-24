@@ -22,11 +22,9 @@ In order to access /, the server will look for ./pages/.html. Smiliar thing for 
 You can customize error pages 
 """
 
-__dev_version__ = "0.0.9"
+__dev_version__ = "0.0.11"
 __version__ = __dev_version__
 
-
-# TODO: Add `debug=True` mode to decorators for routes and responses.
 
 # TODO: Allow datatype checking in route and response uri (example below)
 # @route("/example/:<var>:<type>")
