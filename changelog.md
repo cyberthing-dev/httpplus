@@ -8,6 +8,11 @@ Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-5/-6. 
 ## Developmental (0.0.X)
 2023/01/16-
 
+### v0.0.10 (2023/02/23 )
+* Updated TODOs.
+* Moved `Response.send()` to `Response.__call__()`. This may prevent devs from accidentally calling `Response.send()`.
+* Moved response code setting in `Response._call__()` to be executed before header setting.
+
 ### v0.0.9 (2023/02/23 17:15)
 * Default error pages now include http code cat!
 * `http.Server()` binding now defaults to `127.0.0.1:8080` in accordance with the `http_plus.server` module script defaults.

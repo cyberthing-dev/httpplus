@@ -26,8 +26,6 @@ __dev_version__ = "0.0.9"
 __version__ = __dev_version__
 
 
-# TODO: Add a `@route` decorator that can be used to register a route.
-
 # TODO: Add `debug=True` mode to decorators for routes and responses.
 
 # TODO: Allow datatype checking in route and response uri (example below)
@@ -43,6 +41,8 @@ __version__ = __dev_version__
 # TODO: SEND_RESPONSE_CODE to accept debug:bool (maybe traceback:bool?) to know whether to print the traceback or not.
 
 # TODO: SEND_RESPONSE_CODE to send error code and title in <h1> and other info in <p>.
+
+# TODO: move TODOs to GitHub issues.
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from .content_types import detect_content_type
@@ -158,7 +158,7 @@ class Handler(BaseHTTPRequestHandler):
                 matched, kwargs = self.match_route(self.path, func_path)
                 if matched:
                     response:Response = self.responses["get"][func_path](Request(self, params=kwargs),Response(self))
-                    response.send()
+                    response()
                     return
             else:
                 self.error(404, message=self.path)
@@ -182,7 +182,7 @@ class Handler(BaseHTTPRequestHandler):
                 matched, kwargs = self.match_route(self.path, func_path)
                 if matched:
                     response:Response = self.responses["post"][func_path](Request(self, params=kwargs),Response(self))
-                    response.send()
+                    response()
                     return
             else:
                 self.error(404, message=self.path)
@@ -205,7 +205,7 @@ class Handler(BaseHTTPRequestHandler):
                 matched, kwargs = self.match_route(self.path, func_path)
                 if matched:
                     response:Response = self.responses["put"][func_path](Request(self, params=kwargs),Response(self))
-                    response.send()
+                    response()
                     return
             else:
                 self.error(404, message=self.path)
@@ -228,7 +228,7 @@ class Handler(BaseHTTPRequestHandler):
                 matched, kwargs = self.match_route(self.path, func_path)
                 if matched:
                     response:Response = self.responses["delete"][func_path](Request(self, params=kwargs),Response(self))
-                    response.send()
+                    response()
                     return
             else:
                 self.error(404, message=self.path)
@@ -251,7 +251,7 @@ class Handler(BaseHTTPRequestHandler):
                 matched, kwargs = self.match_route(self.path, func_path)
                 if matched:
                     response:Response = self.responses["patch"][func_path](Request(self, params=kwargs),Response(self))
-                    response.send()
+                    response()
                     return
             else:
                 self.error(404, message=self.path)
@@ -274,7 +274,7 @@ class Handler(BaseHTTPRequestHandler):
                 matched, kwargs = self.match_route(self.path, func_path)
                 if matched:
                     response:Response = self.responses["options"][func_path](Request(self, params=kwargs),Response(self))
-                    response.send()
+                    response()
                     return
             else:
                 self.error(404, message=self.path)
@@ -297,7 +297,7 @@ class Handler(BaseHTTPRequestHandler):
                 matched, kwargs = self.match_route(self.path, func_path)
                 if matched:
                     response:Response = self.responses["head"][func_path](Request(self, params=kwargs),Response(self))
-                    response.send()
+                    response()
                     return
             else:
                 self.error(404, message=self.path)
@@ -320,7 +320,7 @@ class Handler(BaseHTTPRequestHandler):
                 matched, kwargs = self.match_route(self.path, func_path)
                 if matched:
                     response:Response = self.responses["trace"][func_path](Request(self, params=kwargs),Response(self))
-                    response.send()
+                    response()
                     return
             else:
                 self.error(404, message=self.path)
