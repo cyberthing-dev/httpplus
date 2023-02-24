@@ -35,4 +35,8 @@ def _(req:http_plus.Request, res:http_plus.Response):
 def _(req:http_plus.Request, res:http_plus.Response):
     raise Exception("This is an error test, completely normal stuff dont worry lol why are you worrying i said stop worrying stop crying why are you crying this is normal.")
 
+@http_plus.get(server, "/google")
+def _(req:http_plus.Request, res:http_plus.Response):
+    return res.redirect("https://google.com")
+
 server.listen()

@@ -151,31 +151,25 @@ class Response:
         self.status_code = code
         return self
 
-    def route(self,path_to:str,link:bool=False) -> "Response":
+    def redirect(self,to:str) -> "Response":
         """
-        Will route to the specified path (`path_to`).
-        If `link` is True, this will route to a page rather than a file or directory.
-        (Note: If this is a linked route, then path can be a url to another page entirely.)
+        Will redirect client to the specified destination.
 
         Args:
-            `path_to (str)`: The path to route to.
-            `link (bool)`: Whether or not to route to a page.
+            `to (str)`: The path to route to.
         """
-        if link:
-            self.headers["Location"] = path_to
-            self.status_code = 302 # Found == temporary redirect
-            self.isLinked = True
-        else:
-            self._route = Route(path_to, "pages")
+        self.headers["Location"] = to
+        self.status_code = 302 # Found == temporary redirect
+        self.isLinked = True
         return self
 
-    def send(self):
+    def __call__(self) -> None:
         """
-        Sends the response to the client. You should not call this manually unless you are modifying `server`.
+        Sends the response to the client. You should not call this manually unless you are modifying `http_plus.Server`.
         """
+        self.response.send_response(self.status_code)
         for header, value in self.headers.items():
             self.response.send_header(header, value)
-        self.response.send_response(self.status_code)
         self.response.end_headers()
         if not self.isLinked:
             self.response.wfile.write(self.body.encode())

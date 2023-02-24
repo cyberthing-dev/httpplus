@@ -1,8 +1,11 @@
 
-import os
+class test:
+    def __init__(self,thing):
+        self.thing=thing
 
-with open("another_test.py",'w') as f:
-    print("""
-a=4
-print(f"{a+2}")
-""",file=f)
+    def __call__(self):
+        print(f"{self.thing=}")
+
+t = test("hello")
+
+t()
