@@ -22,18 +22,16 @@ In order to access /, the server will look for ./pages/.html. Smiliar thing for 
 You can customize error pages 
 """
 
-__dev_version__ = "0.0.9"
+__dev_version__ = "0.0.11"
 __version__ = __dev_version__
 
-
-# TODO: Add `debug=True` mode to decorators for routes and responses.
 
 # TODO: Allow datatype checking in route and response uri (example below)
 # @route("/example/:<var>:<type>")
 # If the type is not specified, it will default to `str`. If the type is violated, it will return a 400 "expected <type> for <var>" error.
 # Valid types should be str, bool, int, float, bin, and hex.
 
-# TODO: Add HTML object for response bodies.
+# TODO: Add HTML object for response bodies. (see integration with brython)
 # HTML.body, .head, .render(**kwargs), etc.
 
 # TODO: Add .match_route check to adding new routes, currently wildcard routes will conflict with other routes.
@@ -43,6 +41,12 @@ __version__ = __dev_version__
 # TODO: SEND_RESPONSE_CODE to send error code and title in <h1> and other info in <p>.
 
 # TODO: move TODOs to GitHub issues.
+
+# TODO: `--log '<fmt>'` option for `python -m http_plus.server`
+# Format options can include !time, !date, !method, !path, !code, !ip, !proto, !headers, !body
+# Default format: [!time] [!ip] - "!method !path !proto" !code+
+
+# TODO: Integrate with brython!
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from .content_types import detect_content_type
@@ -130,18 +134,49 @@ class Handler(BaseHTTPRequestHandler):
 
     @staticmethod
     def match_route(path:str, route:str) -> tuple[bool,dict[str,str]]:
+        """Checks if a given `path` from a request matches a given `route` from a predefined route.
+        
+        Args:
+            `path (str)`: The path from the request.
+            `route (str)`: The route from the predefined route.
+        Returns:
+            `tuple[bool,dict[str,str]]`: A tuple containing a boolean value indicating whether the path
+            matches the route, and a dictionary containing the keyword variables from the route.
+        """
         if len(path.split("/")) == len(route.split("/")):
-            temp={}
+            kwargs={}
             for path_part, route_part in zip(path.split("/"), route.split("/")):
                 if route_part.startswith(":"):
-                    temp[route_part[1:]] = path_part
+                    # Check if the route part specifies a type
+                    split = route_part.split(":")[1:]
+                    # standard route syntax validation
+
+                    if len(split) == 2:
+                        route_part, type_ = split
+                    elif len(split) == 1:
+                        route_part, type_ = route_part[1:], "str"
+                    else:
+                        raise ValueError("Invalid route syntax.")
+
+                    try:
+                        # Fancy way of converting
+                        kwargs[route_part[1:]] = {
+                            "int": int,
+                            "float": float,
+                            "str": str,
+                            "bool": bool
+                        }[type_]
+                    except (KeyError,ValueError):
+                        raise ValueError(f"Invalid type {type_}.")
+                    # The route part does not specify a type, default to `str`
+                    kwargs[route_part] = path_part
                 elif route_part == "*":
                     # TODO: Implement further wildcard matching
                     pass
                 elif route_part != path_part:
                     break
             else:
-                return True, temp
+                return True, kwargs
         return False, {}
 
     def do_GET(self):
