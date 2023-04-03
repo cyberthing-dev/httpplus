@@ -8,11 +8,10 @@ Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-5/-6. 
 ## Developmental (0.0.X)
 2023/01/16-
 
-### v0.0.11 (2023/02/23 )
+### v0.0.11 (2023/04/03 12:57)
 * Updated TODOs.
-* Added debug capabilities to decorators!
 * Cancelled decorator debug capabilities because it was too much work.
-
+* Route types. Defaults to `str`, but specified with `@http.<method>(...,"/path/to/endpoint/:var:<type>")`.
 
 ### v0.0.10 (2023/02/23 18:20)
 * Updated TODOs.
