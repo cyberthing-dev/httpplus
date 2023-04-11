@@ -1,7 +1,8 @@
 
 import http_plus_purplelemons_dev as http_plus
+from time import sleep
 
-server = http_plus.Server("0.0.0.0", 80, debug=True)
+server = http_plus.Server("0.0.0.0", 8000, debug=True)
 
 @http_plus.get(server, "/")
 def _(req:http_plus.Request, res:http_plus.Response):
@@ -38,5 +39,11 @@ def _(req:http_plus.Request, res:http_plus.Response):
 @http_plus.get(server, "/google")
 def _(req:http_plus.Request, res:http_plus.Response):
     return res.redirect("https://google.com")
+
+@http_plus.stream(server, "/stream_test")
+def _(req:http_plus.Request, res:http_plus.StreamResponse):
+    for i in range(10):
+        yield res.event(str(i), "test")
+        sleep(1)
 
 server.listen()
