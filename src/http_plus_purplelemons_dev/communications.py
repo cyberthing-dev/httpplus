@@ -12,6 +12,26 @@ class RouteExistsError(Exception):
     def __init__(self, route:str=...):
         super().__init__(f"Route {route} already exists." if route else "Route already exists.")
 
+class Event:
+    """
+    Used for streaming events to the client. Set up a listener with `http_plus.stream(path=str)`
+    """
+
+    def __init__(self, data:str, event_name:str=None, id:str=None):
+        self.data = data
+        self.event_name = event_name
+        self.id = id
+
+    def to_bytes(self) -> bytes:
+        message = ""
+        if self.event_name:
+            message += f"event: {self.event_name}\r\n"
+        if self.id:
+            message += f"id: {self.id}\r\n"
+        message += f"data: {self.data}\r\n"
+        message += "\r\n"
+        return message.encode()
+
 @dataclass
 class Route:
     """Custom dataclass for optimizing route creation, readability, and resolution.
@@ -174,3 +194,24 @@ class Response:
         if not self.isLinked:
             self.response.wfile.write(self.body.encode())
         return
+
+class StreamResponse(Response):
+    """
+    StreamResponse should be used exclusively with `@http_plus.stream(path=str)`.
+
+    Yield events with `response.event(data=...,[event=...],[id=...])` where `data` is required and `event` and `id` is optional (`event` defaults to "message").
+    """
+
+    def event(self, data:str, event_name:str=None, id:int=None) -> Event:
+        """
+        Creates an event that will be streamed to the client. Yield this function to stream events to the client.
+
+        `data` should be a string. Use `json.dumps()` to convert a dict or list to a string.
+
+        Args:
+            `data (str)`: The data to stream to the client.
+            `event (str)`: The event to send the data as. Defaults to `"message"`. Listen to the event on the client with `EventSource.addEventListener(event_name, callback)`.
+
+            `id (int)`: The id of the event. Defaults to `None`. Listen to the event on the client with `EventSource.addEventListener(event_name, callback, { id: event_id })`.
+        """
+        return Event(data, event_name, id)

@@ -22,7 +22,7 @@ In order to access /, the server will look for ./pages/.html. Smiliar thing for 
 You can customize error pages 
 """
 
-__dev_version__ = "0.0.11"
+__dev_version__ = "0.0.12"
 __version__ = __dev_version__
 
 
@@ -51,9 +51,10 @@ __version__ = __dev_version__
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from .content_types import detect_content_type
 from os.path import exists
-from .communications import Route, RouteExistsError, Request, Response
+from .communications import Route, RouteExistsError, Request, Response, StreamResponse
 from .static_responses import SEND_RESPONSE_CODE
 from traceback import print_exception as print_exc
+from typing import Callable
 
 class Handler(BaseHTTPRequestHandler):
     """
@@ -72,7 +73,7 @@ class Handler(BaseHTTPRequestHandler):
         "head": {},
         "trace": {}
     }
-    responses:dict[str,dict[str,]] = { # I spent 30m trying to debug this because this was originally set to `routes.copy()`. im never using `.copy()` again.
+    responses:dict[str,dict[str,Callable]] = { # I spent 30m trying to debug this because this was originally set to `routes.copy()`. im never using `.copy()` again.
         "get": {},
         "post": {},
         "put": {},
@@ -80,7 +81,9 @@ class Handler(BaseHTTPRequestHandler):
         "patch": {},
         "options": {},
         "head": {},
-        "trace": {}
+        "trace": {},
+        # note: stream is not a valid HTTP method, but it is used for streaming responses.
+        "stream": {}
     }
     page_dir:str
     error_dir:str
@@ -183,17 +186,27 @@ class Handler(BaseHTTPRequestHandler):
         """GET requests. Do not modify unless you know what you are doing.
         Use the `@server.get(path)` decorator instead."""
         try:
+            # try files first
             for route_path in self.routes["get"]:
                 if route_path == self.path:
                     route = self.routes["get"][route_path]
                     #print(f"Given {self.path}, redirecting to {route.full_path}")
                     self.respond_file(200,self.resolve_path("get",route.full_path))
                     return
+            # try functional responses 2nd
             for func_path in self.responses["get"]:
                 matched, kwargs = self.match_route(self.path, func_path)
                 if matched:
                     response:Response = self.responses["get"][func_path](Request(self, params=kwargs),Response(self))
                     response()
+                    return
+            # try streams 3rd
+            for func_path in self.responses["stream"]:
+                matched, kwargs = self.match_route(self.path, func_path)
+                if matched:
+                    self.respond(200, "", {"Content-Type": "text/event-stream"})
+                    for event in self.responses["stream"][func_path](Request(self, params=kwargs),StreamResponse(self)):
+                        self.wfile.write(event.to_bytes())
                     return
             else:
                 self.error(404, message=self.path)
@@ -392,7 +405,7 @@ class Server:
     def listen(self) -> None:
         """Starts the server, a blocking loop on the current thread."""
         if self.debug:
-            print(f"Listening on http://{self.host}:{self.port}")
+            print(f"Listening on http://{self.host}{':'+str(self.port) if self.port != 80 else ''}/")
         try:
             HTTPServer((self.host, self.port), self.handler).serve_forever()
         except KeyboardInterrupt:
@@ -448,6 +461,21 @@ def all(server:Server, path:str):
                 method(server, path)(func)
             except KeyError:
                 raise RouteExistsError(path)
+    return decorator
+
+def stream(server:Server, path:str):
+    """A decorator that adds a route to the server. Listens to all HTTP methods.
+    
+    Args:
+        `server (Server)`: You must declare the HTTP Plus server
+            and specify it in method decorators.
+        `path (str)`: The path to respond to.
+    """
+    def decorator(func):
+        try:
+            server.handler.responses["stream"][path] = func
+        except KeyError:
+            raise RouteExistsError(path)
     return decorator
 
 def get(server:Server, path:str):
