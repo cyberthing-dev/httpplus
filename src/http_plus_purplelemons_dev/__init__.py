@@ -26,17 +26,41 @@ __dev_version__ = "0.0.12"
 __version__ = __dev_version__
 
 
-# TODO: Allow datatype checking in route and response uri (example below)
-# @route("/example/:<var>:<type>")
-# If the type is not specified, it will default to `str`. If the type is violated, it will return a 400 "expected <type> for <var>" error.
-# Valid types should be str, bool, int, float, bin, and hex.
+# TODO: Native GraphQL support.
+
+# TODO: Authentication support.
+""" Example:
+auth = http_plus.Auth()
+
+@http_plus.get(server, "/home")
+def _(req:http_plus.Request, res:http_plus.Response):
+    token = req.authorization
+    if not auth.check_token(token):
+        return res.set_body("Invalid token", code=401)
+    return res.set_body(f"Hello, {auth[token].username}! You have {auth[token].data} data.")
+
+@http_plus.post(server, "/login")
+def _(req:http_plus.Request, res:http_plus.Response):
+    # ...
+    # ... ensure username and password are correct...
+    # ...
+
+    token = auth.generate_token(
+        username=req.json["username"],
+        data=req.json["data"]
+    )
+    # auth.generate_token returns a string, which is the token. it also stores information given to it
+    return res.set_body("Login page", code=401, headers={"Authorization": token})
+"""
+
+# TODO: use functools.wraps to preserve function names and docstrings as well as get rid of the need to pass `server` into decorators.
 
 # TODO: Add HTML object for response bodies. (see integration with brython)
 # HTML.body, .head, .render(**kwargs), etc.
 
 # TODO: Add .match_route check to adding new routes, currently wildcard routes will conflict with other routes.
 
-# TODO: SEND_RESPONSE_CODE to accept debug:bool (maybe traceback:bool?) to know whether to print the traceback or not.
+# TODO: SEND_RESPONSE_CODE to accept `debug:bool` (maybe `traceback:bool`?) to know whether to print the traceback or not.
 
 # TODO: SEND_RESPONSE_CODE to send error code and title in <h1> and other info in <p>.
 

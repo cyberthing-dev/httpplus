@@ -8,7 +8,7 @@ Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-5/-6. 
 ## Developmental (0.0.X)
 2023/01/16-
 
-### v0.0.12 (2023/04/)
+### v0.0.12 (2023/04/11 16:16)
 * Event streams! Use `@http_plus.stream(...,"/path/to/endpoint")` and a [StreamResponse](https://github.com/search?q=repo%3Apurplelemons-dev/httpplus%20StreamResponse&type=code) object is used as the response.
 
 ### v0.0.11 (2023/04/03 12:57)
