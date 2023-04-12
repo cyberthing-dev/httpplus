@@ -35,7 +35,7 @@ auth = http_plus.Auth()
 @http_plus.get(server, "/home")
 def _(req:http_plus.Request, res:http_plus.Response):
     token = req.authorization
-    if not auth.check_token(token):
+    if not auth.check(token):
         return res.set_body("Invalid token", code=401)
     return res.set_body(f"Hello, {auth[token].username}! You have {auth[token].data} data.")
 
@@ -44,13 +44,12 @@ def _(req:http_plus.Request, res:http_plus.Response):
     # ...
     # ... ensure username and password are correct...
     # ...
-
-    token = auth.generate_token(
+    token = auth.generate(
         username=req.json["username"],
         data=req.json["data"]
     )
-    # auth.generate_token returns a string, which is the token. it also stores information given to it
-    return res.set_body("Login page", code=401, headers={"Authorization": token})
+    # auth.generate returns a string, which is the token. it also stores information given to it
+    return res.set_body("Login page", code=401)
 """
 
 # TODO: use functools.wraps to preserve function names and docstrings as well as get rid of the need to pass `server` into decorators.
@@ -79,6 +78,7 @@ from .communications import Route, RouteExistsError, Request, Response, StreamRe
 from .static_responses import SEND_RESPONSE_CODE
 from traceback import print_exception as print_exc
 from typing import Callable
+from .auth import Auth
 
 class Handler(BaseHTTPRequestHandler):
     """
@@ -407,7 +407,7 @@ class Server:
     Main class for the HTTP Plus server library.
     * Initialize the server with `server = Server(host, port)`.
     * Listen to HTTP methods with `@httpplus.server.<method>(server,path)`,
-        for example `@httpplus.get("/")`.
+        for example `@http_plus.get("/")`.
     """
 
     def __init__(self, host:str="127.0.0.1", port:int=8080, /, *, page_dir:str="./pages", error_dir="./errors", debug:bool=False, **kwargs):

@@ -4,6 +4,8 @@ from time import sleep
 
 server = http_plus.Server("0.0.0.0", 8000, debug=True)
 
+auth = http_plus.Auth()
+
 @http_plus.get(server, "/")
 def _(req:http_plus.Request, res:http_plus.Response):
     return res.set_body("Hello, world!")
@@ -45,5 +47,23 @@ def _(req:http_plus.Request, res:http_plus.StreamResponse):
     for i in range(10):
         yield res.event(str(i), "test")
         sleep(1)
+
+@http_plus.get(server, "/auth_test")
+def _(req:http_plus.Request, res:http_plus.Response):
+    if req.authorization is not None:
+        scheme, token = req.authorization
+        user = auth[token]
+        return res.set_body(f"Hello, authenticated user!\nName: {user.username}\nID: {user.id}")
+    return res.set_body("You are not authenticated.")
+
+@http_plus.get(server, "/get_authed")
+def _(req:http_plus.Request, res:http_plus.Response):
+    token = auth.generate(
+        username="test",
+        id=1234
+    )
+    return res.set_body({
+        "token": token
+    })
 
 server.listen()

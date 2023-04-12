@@ -82,12 +82,17 @@ class Request:
 
     def __init__(self, request:BaseHTTPRequestHandler, /, *, params:dict[str,str]):
         self.request = request
+        "The request object directly from the HTTP Server."
         self.path = request.path
         self.method = request.command
         self.headers = request.headers
-        self.body = request.rfile.read(int(request.headers.get("Content-Length", 0)))
+        "The headers of the request (equivalent to request.headers)."
+        self.authorization = self.get_auth()
+        "The authorization header of the request, if it exists, in the format `(scheme,token)`. Is `None` if it doesn't exist."
+        self.body = request.rfile.read(int(request.headers.get("Content-Length", 0))).decode()
         self.ip, self.port = request.client_address
         self.params = self.Params(params)
+        "The a dictionary-like object containing the parameters from the request url's keyword path."
 
     # Dunder pog
     def __repr__(self) -> str:
@@ -111,8 +116,17 @@ class Request:
     def __bool__(self) -> bool:
         return True
 
-    def get_header(self, header:str) -> str:
-        return self.headers[header]
+    def get_header(self, header:str, default=None) -> str:
+        try:
+            return self.headers[header]
+        except KeyError:
+            return default
+    
+    def get_auth(self, default=None) -> "str|None":
+        try:
+            return self.headers["Authorization"].split(" ",1)
+        except AttributeError:
+            return default
 
     @property
     def json(self) -> dict:
@@ -147,7 +161,7 @@ class Response:
     def set_body(self, body:bytes|str|dict) -> "Response":
         """
         Automatically pareses the body into bytes, and sets the Content-Type header to application/json if the body is a dict.
-        Will be overwritten if `Response
+        Will be overwritten if `Response` is returned from the HTTP method listener function.
 
         Args:
             `body (bytes|str|dict)`: The body of the response.
