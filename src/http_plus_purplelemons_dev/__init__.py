@@ -22,7 +22,7 @@ In order to access /, the server will look for ./pages/.html. Smiliar thing for 
 You can customize error pages 
 """
 
-__dev_version__ = "0.0.12"
+__dev_version__ = "0.0.13"
 __version__ = __dev_version__
 
 
