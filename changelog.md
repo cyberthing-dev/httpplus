@@ -1,12 +1,17 @@
 # Changelog
 
 Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-5/-6. (I've lived in America my whole life, don't @ me, using YYYY/MM/DD is hard enough)
-* [Developmental](#developmental-00x) -- This stage will end when I finish implementing all the features I want to.
+* [Developmental](#developmental-00x) -- This stage will end when I finish implementing all the features I want to. Found in [src/http_plus_purplelemons_dev](./src/http_plus_purplelemons_dev).
 * [Pre-release](#) -- This stage will end when I finish gathering feedback from the community and adding new features.
 * [Release](#) -- This stage will be continuous and offer bug fixes, maybe new features.
 
 ## Developmental (0.0.X)
 2023/01/16-
+
+### v0.0.14 (2023/07/09 15:08)
+* Updated TODOs.
+* `@server(path)` now works! I'm not sure why i couldn't get it to work at first, but it works now!
+* Added [HTML objects!](./src/http_plus_purplelemons_dev/html.py)
 
 ### v0.0.13 (2023/04/12 13:54)
 * [Authorization!](./src/http_plus_purplelemons_dev/auth.py). Handles automatically generating tokens and will keep track of data associated with the token.
