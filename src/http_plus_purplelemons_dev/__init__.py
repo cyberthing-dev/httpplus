@@ -22,35 +22,11 @@ In order to access /, the server will look for ./pages/.html. Smiliar thing for 
 You can customize error pages 
 """
 
-__dev_version__ = "0.0.13"
+__dev_version__ = "0.0.14"
 __version__ = __dev_version__
 
 
 # TODO: Native GraphQL support.
-
-# TODO: Authentication support.
-""" Example:
-auth = http_plus.Auth()
-
-@http_plus.get(server, "/home")
-def _(req:http_plus.Request, res:http_plus.Response):
-    token = req.authorization
-    if not auth.check(token):
-        return res.set_body("Invalid token", code=401)
-    return res.set_body(f"Hello, {auth[token].username}! You have {auth[token].data} data.")
-
-@http_plus.post(server, "/login")
-def _(req:http_plus.Request, res:http_plus.Response):
-    # ...
-    # ... ensure username and password are correct...
-    # ...
-    token = auth.generate(
-        username=req.json["username"],
-        data=req.json["data"]
-    )
-    # auth.generate returns a string, which is the token. it also stores information given to it
-    return res.set_body("Login page", code=401)
-"""
 
 # TODO: use functools.wraps to preserve function names and docstrings as well as get rid of the need to pass `server` into decorators.
 
@@ -70,6 +46,8 @@ def _(req:http_plus.Request, res:http_plus.Response):
 # Default format: [!time] [!ip] - "!method !path !proto" !code+
 
 # TODO: Integrate with brython!
+
+# TODO: work on /path/to/page/.py. where .py is a python file that will get run when the path is requested. The file should somehow be able to return an HTML object.
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from .content_types import detect_content_type
@@ -447,6 +425,157 @@ class Server:
         """
         return response
 
+    def all(self, path:str):
+        """A decorator that adds a route to the server. Listens to all HTTP methods.
+        
+        Args:
+            `server (Server)`: You must declare the HTTP Plus server
+                and specify it in method decorators.
+            `path (str)`: The path to respond to.
+        """
+        def decorator(func):
+            for method in (self.get, self.post, self.put, self.delete, self.options, self.head, self.trace):
+                try:
+                    method(path)(func)
+                except KeyError:
+                    raise RouteExistsError(path)
+        return decorator
+    
+    def stream(self, path:str):
+        """A decorator that adds a route to the server. Listens to all HTTP methods.
+        
+        Args:
+            `server (Server)`: You must declare the HTTP Plus server
+                and specify it in method decorators.
+            `path (str)`: The path to respond to.
+        """
+        def decorator(func):
+            try:
+                self.handler.responses["stream"][path] = func
+            except KeyError:
+                raise RouteExistsError(path)
+        return decorator
+    
+    def get(self, path:str):
+        """A decorator that adds a route to the server. Listens to GET requests.
+        
+        Args:
+            `server (Server)`: You must declare the HTTP Plus server
+                and specify it in method decorators.
+            `path (str)`: The path to respond to.
+        """
+        def decorator(func):
+            try:
+                self.handler.responses["get"][path] = func
+            except KeyError:
+                raise RouteExistsError(path)
+        return decorator
+    
+    def post(self, path:str):
+        """A decorator that adds a route to the server. Listens to POST requests.
+        
+        Args:
+            `server (Server)`: You must declare the HTTP Plus server
+                and specify it in method decorators.
+            `path (str)`: The path to respond to.
+        """
+        def decorator(func):
+            try:
+                self.handler.responses["post"][path] = func
+            except KeyError:
+                raise RouteExistsError(path)
+        return decorator
+    
+    def put(self, path:str):
+        """A decorator that adds a route to the server. Listens to PUT requests.
+        
+        Args:
+            `server (Server)`: You must declare the HTTP Plus server
+                and specify it in method decorators.
+            `path (str)`: The path to respond to.
+        """
+        def decorator(func):
+            try:
+                self.handler.responses["put"][path] = func
+            except KeyError:
+                raise RouteExistsError(path)
+        return decorator
+    
+    def delete(self, path:str):
+        """A decorator that adds a route to the server. Listens to DELETE requests.
+        
+        Args:
+            `server (Server)`: You must declare the HTTP Plus server
+                and specify it in method decorators.
+            `path (str)`: The path to respond to.
+        """
+        def decorator(func):
+            try:
+                self.handler.responses["delete"][path] = func
+            except KeyError:
+                raise RouteExistsError(path)
+        return decorator
+    
+    def patch(self, path:str):
+        """A decorator that adds a route to the server. Listens to PATCH requests.
+        
+        Args:
+            `server (Server)`: You must declare the HTTP Plus server
+                and specify it in method decorators.
+            `path (str)`: The path to respond to.
+        """
+        def decorator(func):
+            try:
+                self.handler.responses["patch"][path] = func
+            except KeyError:
+                raise RouteExistsError(path)
+        return decorator
+    
+    def options(self, path:str):
+        """A decorator that adds a route to the server. Listens to OPTIONS requests.
+        
+        Args:
+            `server (Server)`: You must declare the HTTP Plus server
+                and specify it in method decorators.
+            `path (str)`: The path to respond to.
+        """
+        def decorator(func):
+            try:
+                self.handler.responses["options"][path] = func
+            except KeyError:
+                raise RouteExistsError(path)
+        return decorator
+        
+    def head(self, path:str):
+        """A decorator that adds a route to the server. Listens to HEAD requests.
+        
+        Args:
+            `server (Server)`: You must declare the HTTP Plus server
+                and specify it in method decorators.
+            `path (str)`: The path to respond to.
+        """
+        def decorator(func):
+            try:
+                self.handler.responses["head"][path] = func
+            except KeyError:
+                raise RouteExistsError(path)
+        return decorator
+        
+    def trace(self, path:str):
+        """A decorator that adds a route to the server. Listens to TRACE requests.
+        
+        Args:
+            `server (Server)`: You must declare the HTTP Plus server
+                and specify it in method decorators.
+            `path (str)`: The path to respond to.
+        """
+        def decorator(func):
+            try:
+                self.handler.responses["trace"][path] = func
+            except KeyError:
+                raise RouteExistsError(path)
+        return decorator
+
 
 def init():
     """Initializes the current directory for HTTP+"""
@@ -471,153 +600,3 @@ server.listen()
 """, file=f)
 
 ### DECORATORS == boilerplate :( ###
-def all(server:Server, path:str):
-    """A decorator that adds a route to the server. Listens to all HTTP methods.
-    
-    Args:
-        `server (Server)`: You must declare the HTTP Plus server
-            and specify it in method decorators.
-        `path (str)`: The path to respond to.
-    """
-    def decorator(func):
-        for method in (get, post, put, delete, options, head, trace):
-            try:
-                method(server, path)(func)
-            except KeyError:
-                raise RouteExistsError(path)
-    return decorator
-
-def stream(server:Server, path:str):
-    """A decorator that adds a route to the server. Listens to all HTTP methods.
-    
-    Args:
-        `server (Server)`: You must declare the HTTP Plus server
-            and specify it in method decorators.
-        `path (str)`: The path to respond to.
-    """
-    def decorator(func):
-        try:
-            server.handler.responses["stream"][path] = func
-        except KeyError:
-            raise RouteExistsError(path)
-    return decorator
-
-def get(server:Server, path:str):
-    """A decorator that adds a route to the server. Listens to GET requests.
-    
-    Args:
-        `server (Server)`: You must declare the HTTP Plus server
-            and specify it in method decorators.
-        `path (str)`: The path to respond to.
-    """
-    def decorator(func):
-        try:
-            server.handler.responses["get"][path] = func
-        except KeyError:
-            raise RouteExistsError(path)
-    return decorator
-
-def post(server:Server, path:str):
-    """A decorator that adds a route to the server. Listens to POST requests.
-    
-    Args:
-        `server (Server)`: You must declare the HTTP Plus server
-            and specify it in method decorators.
-        `path (str)`: The path to respond to.
-    """
-    def decorator(func):
-        try:
-            server.handler.responses["post"][path] = func
-        except KeyError:
-            raise RouteExistsError(path)
-    return decorator
-
-def put(server:Server, path:str):
-    """A decorator that adds a route to the server. Listens to PUT requests.
-    
-    Args:
-        `server (Server)`: You must declare the HTTP Plus server
-            and specify it in method decorators.
-        `path (str)`: The path to respond to.
-    """
-    def decorator(func):
-        try:
-            server.handler.responses["put"][path] = func
-        except KeyError:
-            raise RouteExistsError(path)
-    return decorator
-
-def delete(server:Server, path:str):
-    """A decorator that adds a route to the server. Listens to DELETE requests.
-    
-    Args:
-        `server (Server)`: You must declare the HTTP Plus server
-            and specify it in method decorators.
-        `path (str)`: The path to respond to.
-    """
-    def decorator(func):
-        try:
-            server.handler.responses["delete"][path] = func
-        except KeyError:
-            raise RouteExistsError(path)
-    return decorator
-
-def patch(server:Server, path:str):
-    """A decorator that adds a route to the server. Listens to PATCH requests.
-    
-    Args:
-        `server (Server)`: You must declare the HTTP Plus server
-            and specify it in method decorators.
-        `path (str)`: The path to respond to.
-    """
-    def decorator(func):
-        try:
-            server.handler.responses["patch"][path] = func
-        except KeyError:
-            raise RouteExistsError(path)
-    return decorator
-
-def options(server:Server, path:str):
-    """A decorator that adds a route to the server. Listens to OPTIONS requests.
-    
-    Args:
-        `server (Server)`: You must declare the HTTP Plus server
-            and specify it in method decorators.
-        `path (str)`: The path to respond to.
-    """
-    def decorator(func):
-        try:
-            server.handler.responses["options"][path] = func
-        except KeyError:
-            raise RouteExistsError(path)
-    return decorator
-    
-def head(server:Server, path:str):
-    """A decorator that adds a route to the server. Listens to HEAD requests.
-    
-    Args:
-        `server (Server)`: You must declare the HTTP Plus server
-            and specify it in method decorators.
-        `path (str)`: The path to respond to.
-    """
-    def decorator(func):
-        try:
-            server.handler.responses["head"][path] = func
-        except KeyError:
-            raise RouteExistsError(path)
-    return decorator
-    
-def trace(server:Server, path:str):
-    """A decorator that adds a route to the server. Listens to TRACE requests.
-    
-    Args:
-        `server (Server)`: You must declare the HTTP Plus server
-            and specify it in method decorators.
-        `path (str)`: The path to respond to.
-    """
-    def decorator(func):
-        try:
-            server.handler.responses["trace"][path] = func
-        except KeyError:
-            raise RouteExistsError(path)
-    return decorator
