@@ -17,8 +17,6 @@ class Attrs:
     def __delattr__(self, key): del self.__dict__[key]
     def __str__(self): return dumps(self.__dict__, indent=2)
     def __repr__(self): return self.__str__()
-    #@property
-    #def __dict__(self): return self.__dict__
 
 class Auth:
     """
@@ -55,7 +53,7 @@ class Auth:
     
     def generate(self, **kwargs):
         """
-        Generate a new authorization.
+        Generate a new authorization and saves it to local login dict.
         """
         token = b64encode(str(grb(128)).encode()).decode()
         self.authorizations[token] = Attrs(**kwargs)

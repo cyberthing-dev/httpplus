@@ -28,8 +28,6 @@ __version__ = __dev_version__
 
 # TODO: Native GraphQL support.
 
-# TODO: use functools.wraps to preserve function names and docstrings as well as get rid of the need to pass `server` into decorators.
-
 # TODO: Add HTML object for response bodies. (see integration with brython)
 # HTML.body, .head, .render(**kwargs), etc.
 
@@ -75,7 +73,8 @@ class Handler(BaseHTTPRequestHandler):
         "head": {},
         "trace": {}
     }
-    responses:dict[str,dict[str,Callable]] = { # I spent 30m trying to debug this because this was originally set to `routes.copy()`. im never using `.copy()` again.
+    # I spent 30m trying to debug this because this was originally set to `routes.copy()`. im never using `.copy()` again.
+    responses:dict[str,dict[str,Callable]] = {
         "get": {},
         "post": {},
         "put": {},
@@ -85,6 +84,7 @@ class Handler(BaseHTTPRequestHandler):
         "head": {},
         "trace": {},
         # note: stream is not a valid HTTP method, but it is used for streaming responses.
+        # see `.communications.StreamResponse`
         "stream": {}
     }
     page_dir:str
@@ -140,7 +140,7 @@ class Handler(BaseHTTPRequestHandler):
     @staticmethod
     def match_route(path:str, route:str) -> tuple[bool,dict[str,str]]:
         """Checks if a given `path` from a request matches a given `route` from a predefined route.
-        
+
         Args:
             `path (str)`: The path from the request.
             `route (str)`: The route from the predefined route.
@@ -164,7 +164,7 @@ class Handler(BaseHTTPRequestHandler):
                         raise ValueError("Invalid route syntax.")
 
                     try:
-                        # Fancy way of converting
+                        # Fancy way of converting the type string to a type
                         kwargs[route_part[1:]] = {
                             "int": int,
                             "float": float,
@@ -185,21 +185,23 @@ class Handler(BaseHTTPRequestHandler):
         return False, {}
 
     def do_GET(self):
-        """GET requests. Do not modify unless you know what you are doing.
-        Use the `@server.get(path)` decorator instead."""
+        """
+        GET requests. Do not modify unless you know what you are doing.
+
+        Use the `@server.get(path)` decorator instead.
+        """
         try:
-            # try files first
+            # try looking for files to serve first
             for route_path in self.routes["get"]:
                 if route_path == self.path:
                     route = self.routes["get"][route_path]
-                    #print(f"Given {self.path}, redirecting to {route.full_path}")
-                    self.respond_file(200,self.resolve_path("get",route.full_path))
+                    self.respond_file(200,self.resolve_path("get", route.full_path))
                     return
             # try functional responses 2nd
             for func_path in self.responses["get"]:
                 matched, kwargs = self.match_route(self.path, func_path)
                 if matched:
-                    response:Response = self.responses["get"][func_path](Request(self, params=kwargs),Response(self))
+                    response:Response = self.responses["get"][func_path](Request(self, params=kwargs), Response(self))
                     response()
                     return
             # try streams 3rd
@@ -207,7 +209,7 @@ class Handler(BaseHTTPRequestHandler):
                 matched, kwargs = self.match_route(self.path, func_path)
                 if matched:
                     self.respond(200, "", {"Content-Type": "text/event-stream"})
-                    for event in self.responses["stream"][func_path](Request(self, params=kwargs),StreamResponse(self)):
+                    for event in self.responses["stream"][func_path](Request(self, params=kwargs), StreamResponse(self)):
                         self.wfile.write(event.to_bytes())
                     return
             else:
@@ -219,19 +221,21 @@ class Handler(BaseHTTPRequestHandler):
 
 
     def do_POST(self):
-        """POST requests. Do not modify unless you know what you are doing.
-        Use the `@server.post(path)` decorator instead."""
+        """
+        POST requests. Do not modify unless you know what you are doing.
+
+        Use the `@server.post(path)` decorator instead.
+        """
         try:
             for route_path in self.routes["post"]:
                 if route_path == self.path:
                     route = self.routes["post"][route_path]
-                    #print(f"Given {self.path}, redirecting to {route.full_path}")
                     self.respond_file(200,self.resolve_path("post",route.full_path))
                     return
             for func_path in self.responses["post"]:
                 matched, kwargs = self.match_route(self.path, func_path)
                 if matched:
-                    response:Response = self.responses["post"][func_path](Request(self, params=kwargs),Response(self))
+                    response:Response = self.responses["post"][func_path](Request(self, params=kwargs), Response(self))
                     response()
                     return
             else:
@@ -242,19 +246,21 @@ class Handler(BaseHTTPRequestHandler):
             return
 
     def do_PUT(self):
-        """PUT requests. Do not modify unless you know what you are doing.
-        Use the `@server.put(path)` decorator instead."""
+        """
+        PUT requests. Do not modify unless you know what you are doing.
+
+        Use the `@server.put(path)` decorator instead.
+        """
         try:
             for route_path in self.routes["put"]:
                 if route_path == self.path:
                     route = self.routes["put"][route_path]
-                    #print(f"Given {self.path}, redirecting to {route.full_path}")
-                    self.respond_file(200,self.resolve_path("put",route.full_path))
+                    self.respond_file(200,self.resolve_path("put", route.full_path))
                     return
             for func_path in self.responses["put"]:
                 matched, kwargs = self.match_route(self.path, func_path)
                 if matched:
-                    response:Response = self.responses["put"][func_path](Request(self, params=kwargs),Response(self))
+                    response:Response = self.responses["put"][func_path](Request(self, params=kwargs), Response(self))
                     response()
                     return
             else:
@@ -265,19 +271,21 @@ class Handler(BaseHTTPRequestHandler):
             return
 
     def do_DELETE(self):
-        """DELETE requests. Do not modify unless you know what you are doing.
-        Use the `@server.delete(path)` decorator instead."""
+        """
+        DELETE requests. Do not modify unless you know what you are doing.
+
+        Use the `@server.delete(path)` decorator instead.
+        """
         try:
             for route_path in self.routes["delete"]:
                 if route_path == self.path:
                     route = self.routes["delete"][route_path]
-                    #print(f"Given {self.path}, redirecting to {route.full_path}")
-                    self.respond_file(200,self.resolve_path("delete",route.full_path))
+                    self.respond_file(200,self.resolve_path("delete", route.full_path))
                     return
             for func_path in self.responses["delete"]:
                 matched, kwargs = self.match_route(self.path, func_path)
                 if matched:
-                    response:Response = self.responses["delete"][func_path](Request(self, params=kwargs),Response(self))
+                    response:Response = self.responses["delete"][func_path](Request(self, params=kwargs), Response(self))
                     response()
                     return
             else:
@@ -288,19 +296,21 @@ class Handler(BaseHTTPRequestHandler):
             return
 
     def do_PATCH(self):
-        """PATCH requests. Do not modify unless you know what you are doing.
-        Use the `@server.patch(path)` decorator instead."""
+        """
+        PATCH requests. Do not modify unless you know what you are doing.
+
+        Use the `@server.patch(path)` decorator instead.
+        """
         try:
             for route_path in self.routes["patch"]:
                 if route_path == self.path:
                     route = self.routes["patch"][route_path]
-                    #print(f"Given {self.path}, redirecting to {route.full_path}")
-                    self.respond_file(200,self.resolve_path("patch",route.full_path))
+                    self.respond_file(200,self.resolve_path("patch", route.full_path))
                     return
             for func_path in self.responses["patch"]:
                 matched, kwargs = self.match_route(self.path, func_path)
                 if matched:
-                    response:Response = self.responses["patch"][func_path](Request(self, params=kwargs),Response(self))
+                    response:Response = self.responses["patch"][func_path](Request(self, params=kwargs), Response(self))
                     response()
                     return
             else:
@@ -311,19 +321,21 @@ class Handler(BaseHTTPRequestHandler):
             return
 
     def do_OPTIONS(self):
-        """OPTIONS requests. Do not modify unless you know what you are doing.
-        Use the `@server.options(path)` decorator instead."""
+        """
+        OPTIONS requests. Do not modify unless you know what you are doing.
+
+        Use the `@server.options(path)` decorator instead.
+        """
         try:
             for route_path in self.routes["options"]:
                 if route_path == self.path:
                     route = self.routes["options"][route_path]
-                    #print(f"Given {self.path}, redirecting to {route.full_path}")
-                    self.respond_file(200,self.resolve_path("options",route.full_path))
+                    self.respond_file(200,self.resolve_path("options", route.full_path))
                     return
             for func_path in self.responses["options"]:
                 matched, kwargs = self.match_route(self.path, func_path)
                 if matched:
-                    response:Response = self.responses["options"][func_path](Request(self, params=kwargs),Response(self))
+                    response:Response = self.responses["options"][func_path](Request(self, params=kwargs), Response(self))
                     response()
                     return
             else:
@@ -334,19 +346,21 @@ class Handler(BaseHTTPRequestHandler):
             return
 
     def do_HEAD(self):
-        """HEAD requests. Do not modify unless you know what you are doing.
-        Use the `@server.head(path)` decorator instead."""
+        """
+        HEAD requests. Do not modify unless you know what you are doing.
+
+        Use the `@server.head(path)` decorator instead.
+        """
         try:
             for route_path in self.routes["head"]:
                 if route_path == self.path:
                     route = self.routes["head"][route_path]
-                    #print(f"Given {self.path}, redirecting to {route.full_path}")
-                    self.respond_file(200,self.resolve_path("head",route.full_path))
+                    self.respond_file(200,self.resolve_path("head", route.full_path))
                     return
             for func_path in self.responses["head"]:
                 matched, kwargs = self.match_route(self.path, func_path)
                 if matched:
-                    response:Response = self.responses["head"][func_path](Request(self, params=kwargs),Response(self))
+                    response:Response = self.responses["head"][func_path](Request(self, params=kwargs), Response(self))
                     response()
                     return
             else:
@@ -357,19 +371,21 @@ class Handler(BaseHTTPRequestHandler):
             return
 
     def do_TRACE(self):
-        """TRACE requests. Do not modify unless you know what you are doing.
-        Use the `@server.trace(path)` decorator instead."""
+        """
+        TRACE requests. Do not modify unless you know what you are doing.
+
+        Use the `@server.trace(path)` decorator instead.
+        """
         try:
             for route_path in self.routes["trace"]:
                 if route_path == self.path:
                     route = self.routes["trace"][route_path]
-                    #print(f"Given {self.path}, redirecting to {route.full_path}")
-                    self.respond_file(200,self.resolve_path("trace",route.full_path))
+                    self.respond_file(200,self.resolve_path("trace", route.full_path))
                     return
             for func_path in self.responses["trace"]:
                 matched, kwargs = self.match_route(self.path, func_path)
                 if matched:
-                    response:Response = self.responses["trace"][func_path](Request(self, params=kwargs),Response(self))
+                    response:Response = self.responses["trace"][func_path](Request(self, params=kwargs), Response(self))
                     response()
                     return
             else:
@@ -384,8 +400,8 @@ class Server:
     """
     Main class for the HTTP Plus server library.
     * Initialize the server with `server = Server(host, port)`.
-    * Listen to HTTP methods with `@httpplus.server.<method>(server,path)`,
-        for example `@http_plus.get("/")`.
+    * Listen to HTTP methods with `@server.<method>(path)`,
+        for example `@server.get("/")`.
     """
 
     def __init__(self, host:str="127.0.0.1", port:int=8080, /, *, page_dir:str="./pages", error_dir="./errors", debug:bool=False, **kwargs):
@@ -417,7 +433,8 @@ class Server:
 
 
     def base(self, request: Request, response: Response, **kwargs) -> Response:
-        """The base function for all routes.
+        """
+        Should be overridden.
         Args:
             `request (Request)`: The request object.
             `response (Response)`: The response object.
@@ -427,10 +444,8 @@ class Server:
 
     def all(self, path:str):
         """A decorator that adds a route to the server. Listens to all HTTP methods.
-        
+
         Args:
-            `server (Server)`: You must declare the HTTP Plus server
-                and specify it in method decorators.
             `path (str)`: The path to respond to.
         """
         def decorator(func):
@@ -443,10 +458,8 @@ class Server:
     
     def stream(self, path:str):
         """A decorator that adds a route to the server. Listens to all HTTP methods.
-        
+
         Args:
-            `server (Server)`: You must declare the HTTP Plus server
-                and specify it in method decorators.
             `path (str)`: The path to respond to.
         """
         def decorator(func):
@@ -458,10 +471,8 @@ class Server:
     
     def get(self, path:str):
         """A decorator that adds a route to the server. Listens to GET requests.
-        
+
         Args:
-            `server (Server)`: You must declare the HTTP Plus server
-                and specify it in method decorators.
             `path (str)`: The path to respond to.
         """
         def decorator(func):
@@ -473,10 +484,8 @@ class Server:
     
     def post(self, path:str):
         """A decorator that adds a route to the server. Listens to POST requests.
-        
+
         Args:
-            `server (Server)`: You must declare the HTTP Plus server
-                and specify it in method decorators.
             `path (str)`: The path to respond to.
         """
         def decorator(func):
@@ -488,10 +497,8 @@ class Server:
     
     def put(self, path:str):
         """A decorator that adds a route to the server. Listens to PUT requests.
-        
+
         Args:
-            `server (Server)`: You must declare the HTTP Plus server
-                and specify it in method decorators.
             `path (str)`: The path to respond to.
         """
         def decorator(func):
@@ -503,10 +510,8 @@ class Server:
     
     def delete(self, path:str):
         """A decorator that adds a route to the server. Listens to DELETE requests.
-        
+
         Args:
-            `server (Server)`: You must declare the HTTP Plus server
-                and specify it in method decorators.
             `path (str)`: The path to respond to.
         """
         def decorator(func):
@@ -518,10 +523,8 @@ class Server:
     
     def patch(self, path:str):
         """A decorator that adds a route to the server. Listens to PATCH requests.
-        
+
         Args:
-            `server (Server)`: You must declare the HTTP Plus server
-                and specify it in method decorators.
             `path (str)`: The path to respond to.
         """
         def decorator(func):
@@ -533,10 +536,8 @@ class Server:
     
     def options(self, path:str):
         """A decorator that adds a route to the server. Listens to OPTIONS requests.
-        
+
         Args:
-            `server (Server)`: You must declare the HTTP Plus server
-                and specify it in method decorators.
             `path (str)`: The path to respond to.
         """
         def decorator(func):
@@ -548,10 +549,8 @@ class Server:
         
     def head(self, path:str):
         """A decorator that adds a route to the server. Listens to HEAD requests.
-        
+
         Args:
-            `server (Server)`: You must declare the HTTP Plus server
-                and specify it in method decorators.
             `path (str)`: The path to respond to.
         """
         def decorator(func):
@@ -563,10 +562,8 @@ class Server:
         
     def trace(self, path:str):
         """A decorator that adds a route to the server. Listens to TRACE requests.
-        
+
         Args:
-            `server (Server)`: You must declare the HTTP Plus server
-                and specify it in method decorators.
             `path (str)`: The path to respond to.
         """
         def decorator(func):
@@ -591,12 +588,10 @@ import http_plus
 
 server = http_plus.Server()
 
-@http_plus.get(server,"/")
+@server.get("/")
 def _(req:http_plus.Request, res:http_plus.Response):
     res.set_header("Content-type", "text/html")
     return res.set_body("<h2>Hello, world!</h2>")
 
 server.listen()
 """, file=f)
-
-### DECORATORS == boilerplate :( ###
