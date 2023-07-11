@@ -6,6 +6,7 @@ Responsible for defining communication objects and functions.
 from json import dumps, loads
 from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler
+from typing import Any
 
 class RouteExistsError(Exception):
     """Raised when a route already exists."""
@@ -54,10 +55,11 @@ class Request:
     """
     Request object, passed into HTTP method listeners as the first argument.
     """
+
     class Params:
         """
         Accessed from `Request.params`.
-        
+
         Given the route `/example/:id`, you may use `Request.params.id`.
         However, if the route is `/example/example-id`, then you must use either
         `Request.params["example-id"]` or `Request.params.get("example-id")`.
@@ -66,7 +68,7 @@ class Request:
             for param, value in kwargs.items():
                 # Fun fact, setattr is ~39% faster than __setattr__.
                 setattr(self, param, value)
-        
+
         def __getitem__(self, key:str) -> str:
             return getattr(self, key)
         def get(self, param:str) -> str:
@@ -121,7 +123,7 @@ class Request:
             return self.headers[header]
         except KeyError:
             return default
-    
+
     def get_auth(self, default=None) -> "str|None":
         try:
             return self.headers["Authorization"].split(" ",1)
@@ -154,11 +156,12 @@ class Response:
         self.isLinked = False
         self._route: Route
 
-    def set_header(self, header:str, value:str) -> "Response":
+    def set_header(self, header:str, value:Any) -> "Response":
+        value = str(value)
         self.headers[header] = value
         return self
 
-    def set_body(self, body:bytes|str|dict) -> "Response":
+    def set_body(self, body:"bytes|str|dict") -> "Response":
         """
         Automatically pareses the body into bytes, and sets the Content-Type header to application/json if the body is a dict.
         Will be overwritten if `Response` is returned from the HTTP method listener function.
@@ -173,6 +176,7 @@ class Response:
             self.body = body.decode()
         else:
             self.body = body
+        self.set_header("Content-Length", len(self.body))
         return self
 
     def status(self,code:int) -> "Response":
@@ -199,7 +203,8 @@ class Response:
 
     def __call__(self) -> None:
         """
-        Sends the response to the client. You should not call this manually unless you are modifying `http_plus.Server`.
+        Sends the response to the client.
+        You should not call this manually unless you are modifying `http_plus.Server`.
         """
         self.response.send_response(self.status_code)
         for header, value in self.headers.items():
@@ -213,7 +218,8 @@ class StreamResponse(Response):
     """
     StreamResponse should be used exclusively with `@http_plus.stream(path=str)`.
 
-    Yield events with `response.event(data=...,[event=...],[id=...])` where `data` is required and `event` and `id` is optional (`event` defaults to "message").
+    Yield events with `response.event(data=...,[event=...],[id=...])` where `data` is required
+    and `event` and `id` is optional (`event` defaults to "message").
     """
 
     def event(self, data:str, event_name:str=None, id:int=None) -> Event:

@@ -2,9 +2,11 @@
 # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
 
 def SEND_RESPONSE_CODE(code:int,path:str="") -> str:
-    """Used explicitly for error code responses (400-599) for now.
+    """
+    Used explicitly for error code responses (400-599) for now.
     Informational responses should be header-only,
-    and sucessful responses *usually* require a specified body."""
+    and sucessful responses *usually* require a specified body.
+    """
     return {
         # 400-499 - client error
         400: _400,

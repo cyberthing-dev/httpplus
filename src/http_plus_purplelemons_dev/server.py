@@ -1,6 +1,6 @@
 
 """
-Currently only supports commandline usage. Do not use this for programming servers.
+Currently only supports command line usage. Do not use this in production.
 Usage:
     `$ python -m http_plus_purplelemons_dev`
 """
@@ -23,7 +23,7 @@ if __name__=="__main__":
 
     server = http_plus.Server("0.0.0.0", args.port, debug=args.debug)
 
-    @http_plus.get(server, "/")
+    @server.get("/")
     def _(req:http_plus.Request, res:http_plus.Response):
         return res.set_body("Hello, world!")
 

@@ -200,6 +200,7 @@ class Input(VoidHTMLObject):
         self.value = value
         self.width = str(width)
 # now some people may ask why i did use beautifulsoup for this
+# thats a great question
 
 class Form(BaseHTMLObject):
     """
@@ -432,5 +433,3 @@ class Button(BaseHTMLObject):
         self.type = "submit" if type_=="submit" else "reset" if type_=="reset" else "button" if type_=="button" else None
         self.value = value
         super().__init__(**kwargs)
-
-
