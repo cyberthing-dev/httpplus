@@ -45,23 +45,42 @@ class Auth:
     def __delitem__(self, token:str):
         del self.authorizations[token]
 
-    def check(self, token:str):
+    def check(self, token:str) -> bool:
         """
         Check if the token is valid.
+
+        Args:
+            token (str): The token to check.
+
+        Returns:
+            bool: Whether the token is valid or not.
         """
         return token in self.authorizations
-    
-    def generate(self, **kwargs):
+
+    def generate(self, /, token_size:int=128, **kwargs) -> str:
         """
-        Generate a new authorization and saves it to local login dict.
+        Generate a new authorization and saves given data to it for later retrieval.
+
+        Args:
+            token_size (int): The size of the token in bits. Defaults to 128.
+            **kwargs: The data to save to the authorization.
+
+        Returns:
+            str: The authorization token.
         """
-        token = b64encode(str(grb(128)).encode()).decode()
+        token = b64encode(str(grb(token_size)).encode()).decode()
         self.authorizations[token] = Attrs(**kwargs)
         return token
 
-    def revoke(self, token:str):
+    def revoke(self, token:str) -> Attrs:
         """
         Revoke an authorization token and returns an Attrs object of the data associated with it.
+
+        Args:
+            token (str): The token to revoke.
+
+        Returns:
+            Attrs: The data associated with the token.
         """
         data = self.authorizations[token]
         del self[token]

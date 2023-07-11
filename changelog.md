@@ -8,7 +8,17 @@ Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-5/-6. 
 ## Developmental (0.0.X)
 2023/01/16-
 
+### v0.0.15 (2023/07/11 18:07)
+* Updated TODOS.
+* Fixed documentation & code formatting and added clarification.
+* `Auth.generate()` now accepts `token_size:int` as an argument for adjusting security level. Defaults to 128.
+* The handler can now serve static files from `./pages/`.
+* `Handler.respond_file()` now uses `Content-length`... 15 versions into dev... this is something that I should have caught a long time ago...
+* HTTP/1.0 -> HTTP/1.1!
+* Note: i believe http+ will be ready for pre-release within a week. This was a huge update.
+
 ### v0.0.14 (2023/07/09 15:08)
+* Moved project to [Cyberthing](https://github.com/cyberthing-dev).
 * Updated TODOs.
 * `@server(path)` now works! I'm not sure why i couldn't get it to work at first, but it works now!
 * Added [HTML objects!](./src/http_plus_purplelemons_dev/html.py)

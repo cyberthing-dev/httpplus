@@ -62,7 +62,9 @@ TYPES = {
 }
 
 def detect_content_type(filename:str) -> str:
-    """Detects the content type of a file based on the file extension.
+    """
+    Detects the content type of a file based on the file extension.
+
     Args:
         `filename (str)`: The name of the file to detect.
     Returns:

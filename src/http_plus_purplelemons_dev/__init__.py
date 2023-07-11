@@ -1,6 +1,6 @@
 
 """Example project structure:
-```
+```txt
 ./Main Folder
     /server.py
     /pages
@@ -17,21 +17,19 @@
             .js
         ...
 ```
-In order to access /, the server will look for ./pages/.html. Smiliar thing for /subfolder, it will look for ./pages/subfolder/.html.
+In order to access `/`, the server will look for `./pages/.html`.
+Smiliarly, requests to `/subfolder` will look for `./pages/subfolder/.html`.
 
-You can customize error pages 
+You can customize error pages by creating a folder in `./errors` with the name of the error code.
 """
 
-__dev_version__ = "0.0.14"
+__dev_version__ = "0.0.15"
 __version__ = __dev_version__
 
 
+# TODO: Add Response.send_file().
+
 # TODO: Native GraphQL support.
-
-# TODO: Add HTML object for response bodies. (see integration with brython)
-# HTML.body, .head, .render(**kwargs), etc.
-
-# TODO: Add .match_route check to adding new routes, currently wildcard routes will conflict with other routes.
 
 # TODO: SEND_RESPONSE_CODE to accept `debug:bool` (maybe `traceback:bool`?) to know whether to print the traceback or not.
 
@@ -55,6 +53,7 @@ from .static_responses import SEND_RESPONSE_CODE
 from traceback import print_exception as print_exc
 from typing import Callable
 from .auth import Auth
+import os.path
 
 class Handler(BaseHTTPRequestHandler):
     """
@@ -90,6 +89,7 @@ class Handler(BaseHTTPRequestHandler):
     page_dir:str
     error_dir:str
     server_version:str = f"http+/{__version__}"
+    protocol_version:str = "HTTP/1.1"
 
     def error(self,code:int, *, message:str=None, headers:dict[str,str]=None, **kwargs) -> None:
         error_page_path = f"{self.error_dir}/{code}/.html"
@@ -100,7 +100,9 @@ class Handler(BaseHTTPRequestHandler):
             self.respond(code,SEND_RESPONSE_CODE(code,message,**kwargs),headers)
 
     def respond_file(self,code:int,filename:str) -> None:
-        """Responds to the client with a file. The filename (filepath) must be relative to the root directory of the server.
+        """
+        Responds to the client with a file.
+        The filename (filepath) must be relative to the root directory of the server.
 
         Args:
             `code (int)`: The HTTP status code to respond with.
@@ -108,8 +110,9 @@ class Handler(BaseHTTPRequestHandler):
         """
         self.send_response(code)
         self.send_header("Content-type", detect_content_type(filename))
-        self.end_headers()
         with open(filename, "rb") as f:
+            self.send_header("Content-length", os.path.getsize(filename))
+            self.end_headers()
             self.wfile.write(f.read())
 
     def respond(self, code:int, message:str, headers:dict[str,str]) -> None:
@@ -184,6 +187,26 @@ class Handler(BaseHTTPRequestHandler):
                 return True, kwargs
         return False, {}
 
+    @staticmethod
+    def serve_filename(path:str) -> "str|None":
+        """
+        Returns the filename of a path. If the path is not a file, returns `None`.
+
+        Args:
+            `path (str)`: The requested uri path.
+        Returns:
+            `str|None`: The path to the desired file, or `None` if the file does not exist.
+        """
+        # Search for files in the form `pages/path/.html`
+        target = f"pages{path}/.html"
+        if not os.path.exists(target):
+            # Search for files in the form `pages/path.html`
+            target = f"pages{path}.html"
+            if not os.path.exists(target):
+                target = None
+
+        return target
+
     def do_GET(self):
         """
         GET requests. Do not modify unless you know what you are doing.
@@ -192,19 +215,25 @@ class Handler(BaseHTTPRequestHandler):
         """
         try:
             # try looking for files to serve first
+            filename = self.serve_filename(self.path)
+            if filename is not None:
+                self.respond_file(200, filename)
+                return
+            # try looking for routes to serve second
             for route_path in self.routes["get"]:
                 if route_path == self.path:
                     route = self.routes["get"][route_path]
-                    self.respond_file(200,self.resolve_path("get", route.full_path))
+                    self.respond_file(200, self.resolve_path("get", route.full_path))
                     return
-            # try functional responses 2nd
+            # try functional responses 3rd
             for func_path in self.responses["get"]:
                 matched, kwargs = self.match_route(self.path, func_path)
                 if matched:
+                    # we execute the response function with the current request and response objects
                     response:Response = self.responses["get"][func_path](Request(self, params=kwargs), Response(self))
                     response()
                     return
-            # try streams 3rd
+            # try streams 4th
             for func_path in self.responses["stream"]:
                 matched, kwargs = self.match_route(self.path, func_path)
                 if matched:
@@ -230,7 +259,7 @@ class Handler(BaseHTTPRequestHandler):
             for route_path in self.routes["post"]:
                 if route_path == self.path:
                     route = self.routes["post"][route_path]
-                    self.respond_file(200,self.resolve_path("post",route.full_path))
+                    self.respond_file(200, self.resolve_path("post",route.full_path))
                     return
             for func_path in self.responses["post"]:
                 matched, kwargs = self.match_route(self.path, func_path)
@@ -255,7 +284,7 @@ class Handler(BaseHTTPRequestHandler):
             for route_path in self.routes["put"]:
                 if route_path == self.path:
                     route = self.routes["put"][route_path]
-                    self.respond_file(200,self.resolve_path("put", route.full_path))
+                    self.respond_file(200, self.resolve_path("put", route.full_path))
                     return
             for func_path in self.responses["put"]:
                 matched, kwargs = self.match_route(self.path, func_path)
@@ -280,7 +309,7 @@ class Handler(BaseHTTPRequestHandler):
             for route_path in self.routes["delete"]:
                 if route_path == self.path:
                     route = self.routes["delete"][route_path]
-                    self.respond_file(200,self.resolve_path("delete", route.full_path))
+                    self.respond_file(200, self.resolve_path("delete", route.full_path))
                     return
             for func_path in self.responses["delete"]:
                 matched, kwargs = self.match_route(self.path, func_path)
@@ -305,7 +334,7 @@ class Handler(BaseHTTPRequestHandler):
             for route_path in self.routes["patch"]:
                 if route_path == self.path:
                     route = self.routes["patch"][route_path]
-                    self.respond_file(200,self.resolve_path("patch", route.full_path))
+                    self.respond_file(200, self.resolve_path("patch", route.full_path))
                     return
             for func_path in self.responses["patch"]:
                 matched, kwargs = self.match_route(self.path, func_path)
@@ -330,7 +359,7 @@ class Handler(BaseHTTPRequestHandler):
             for route_path in self.routes["options"]:
                 if route_path == self.path:
                     route = self.routes["options"][route_path]
-                    self.respond_file(200,self.resolve_path("options", route.full_path))
+                    self.respond_file(200, self.resolve_path("options", route.full_path))
                     return
             for func_path in self.responses["options"]:
                 matched, kwargs = self.match_route(self.path, func_path)
@@ -355,7 +384,7 @@ class Handler(BaseHTTPRequestHandler):
             for route_path in self.routes["head"]:
                 if route_path == self.path:
                     route = self.routes["head"][route_path]
-                    self.respond_file(200,self.resolve_path("head", route.full_path))
+                    self.respond_file(200, self.resolve_path("head", route.full_path))
                     return
             for func_path in self.responses["head"]:
                 matched, kwargs = self.match_route(self.path, func_path)
@@ -380,7 +409,7 @@ class Handler(BaseHTTPRequestHandler):
             for route_path in self.routes["trace"]:
                 if route_path == self.path:
                     route = self.routes["trace"][route_path]
-                    self.respond_file(200,self.resolve_path("trace", route.full_path))
+                    self.respond_file(200, self.resolve_path("trace", route.full_path))
                     return
             for func_path in self.responses["trace"]:
                 matched, kwargs = self.match_route(self.path, func_path)
@@ -405,12 +434,18 @@ class Server:
     """
 
     def __init__(self, host:str="127.0.0.1", port:int=8080, /, *, page_dir:str="./pages", error_dir="./errors", debug:bool=False, **kwargs):
-        """Initializes the server.
+        """
+        Initializes the server.
+        
         Args:
             `host (str)`: The host to listen on. Defaults to all interfaces.
+
             `port (int)`: The port to listen on. Defaults to 80.
+
             `page_dir (str)`: The directory to serve pages from.
+
             `error_dir (str)`: The directory to serve error pages from.
+
             `debug (bool)`: Whether or not to print debug messages.
         """
         self.host = host
@@ -455,7 +490,7 @@ class Server:
                 except KeyError:
                     raise RouteExistsError(path)
         return decorator
-    
+
     def stream(self, path:str):
         """A decorator that adds a route to the server. Listens to all HTTP methods.
 
@@ -468,7 +503,7 @@ class Server:
             except KeyError:
                 raise RouteExistsError(path)
         return decorator
-    
+
     def get(self, path:str):
         """A decorator that adds a route to the server. Listens to GET requests.
 
@@ -477,11 +512,15 @@ class Server:
         """
         def decorator(func):
             try:
+                # not sure what this does or why none of the other methods do it
+                # just gonna leave it here tho ¯\_(ツ)_/¯
+                if any(Handler.match_route(route, path) for route in self.handler.routes["get"]):
+                    raise RouteExistsError(path)
                 self.handler.responses["get"][path] = func
             except KeyError:
                 raise RouteExistsError(path)
         return decorator
-    
+
     def post(self, path:str):
         """A decorator that adds a route to the server. Listens to POST requests.
 
@@ -494,7 +533,7 @@ class Server:
             except KeyError:
                 raise RouteExistsError(path)
         return decorator
-    
+
     def put(self, path:str):
         """A decorator that adds a route to the server. Listens to PUT requests.
 
@@ -507,7 +546,7 @@ class Server:
             except KeyError:
                 raise RouteExistsError(path)
         return decorator
-    
+
     def delete(self, path:str):
         """A decorator that adds a route to the server. Listens to DELETE requests.
 
@@ -520,7 +559,7 @@ class Server:
             except KeyError:
                 raise RouteExistsError(path)
         return decorator
-    
+
     def patch(self, path:str):
         """A decorator that adds a route to the server. Listens to PATCH requests.
 
@@ -533,7 +572,7 @@ class Server:
             except KeyError:
                 raise RouteExistsError(path)
         return decorator
-    
+
     def options(self, path:str):
         """A decorator that adds a route to the server. Listens to OPTIONS requests.
 
@@ -546,7 +585,7 @@ class Server:
             except KeyError:
                 raise RouteExistsError(path)
         return decorator
-        
+
     def head(self, path:str):
         """A decorator that adds a route to the server. Listens to HEAD requests.
 
@@ -559,7 +598,7 @@ class Server:
             except KeyError:
                 raise RouteExistsError(path)
         return decorator
-        
+
     def trace(self, path:str):
         """A decorator that adds a route to the server. Listens to TRACE requests.
 
