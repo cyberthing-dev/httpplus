@@ -23,27 +23,9 @@ Smiliarly, requests to `/subfolder` will look for `./pages/subfolder/.html`.
 You can customize error pages by creating a folder in `./errors` with the name of the error code.
 """
 
-__dev_version__ = "0.0.15"
+__dev_version__ = "0.0.16"
 __version__ = __dev_version__
 
-
-# TODO: Add Response.send_file().
-
-# TODO: Native GraphQL support.
-
-# TODO: SEND_RESPONSE_CODE to accept `debug:bool` (maybe `traceback:bool`?) to know whether to print the traceback or not.
-
-# TODO: SEND_RESPONSE_CODE to send error code and title in <h1> and other info in <p>.
-
-# TODO: move TODOs to GitHub issues.
-
-# TODO: `--log '<fmt>'` option for `python -m http_plus.server`
-# Format options can include !time, !date, !method, !path, !code, !ip, !proto, !headers, !body
-# Default format: [!time] [!ip] - "!method !path !proto" !code+
-
-# TODO: Integrate with brython!
-
-# TODO: work on /path/to/page/.py. where .py is a python file that will get run when the path is requested. The file should somehow be able to return an HTML object.
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from .content_types import detect_content_type

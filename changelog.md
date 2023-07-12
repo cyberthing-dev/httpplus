@@ -8,6 +8,9 @@ Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-5/-6. 
 ## Developmental (0.0.X)
 2023/01/16-
 
+### v0.0.16 (2023/07/12)
+* Moved TODOs to github issues.
+
 ### v0.0.15 (2023/07/11 18:07)
 * Updated TODOS.
 * Fixed documentation & code formatting and added clarification.
