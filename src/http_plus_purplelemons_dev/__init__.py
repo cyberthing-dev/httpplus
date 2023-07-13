@@ -1,5 +1,6 @@
 
-"""Example project structure:
+"""
+Example project structure:
 ```txt
 ./Main Folder
     /server.py
@@ -23,7 +24,7 @@ Smiliarly, requests to `/subfolder` will look for `./pages/subfolder/.html`.
 You can customize error pages by creating a folder in `./errors` with the name of the error code.
 """
 
-__dev_version__ = "0.0.17"
+__dev_version__ = "0.0.18"
 __version__ = __dev_version__
 
 
@@ -32,7 +33,7 @@ from .content_types import detect_content_type
 from os.path import exists
 from .communications import Route, RouteExistsError, Request, Response, StreamResponse
 from .static_responses import SEND_RESPONSE_CODE
-from traceback import print_exception as print_exc
+from traceback import print_exception as print_exc, format_exc
 from typing import Callable
 from .auth import Auth
 import os.path
@@ -70,16 +71,27 @@ class Handler(BaseHTTPRequestHandler):
     }
     page_dir:str
     error_dir:str
+    debug:bool
     server_version:str = f"http+/{__version__}"
     protocol_version:str = "HTTP/1.1"
 
-    def error(self,code:int, *, message:str=None, headers:dict[str,str]=None, **kwargs) -> None:
+    def error(self, code:int, *, message:str=None, headers:dict[str,str]=None, traceback:str="", **kwargs) -> None:
         error_page_path = f"{self.error_dir}/{code}/.html"
         if exists(error_page_path):
             self.respond_file(code, error_page_path)
         else:
-            print(f"Error {code} occured, but no error page was found at {error_page_path}.")
-            self.respond(code,SEND_RESPONSE_CODE(code,message,**kwargs),headers)
+            self.respond(
+                code = code,
+                headers = headers,
+                message = SEND_RESPONSE_CODE(
+                    code = code,
+                    path = message,
+                    traceback = traceback,
+                    **kwargs
+                )
+            )
+            if self.debug: 
+                print(f"Error {code} occured, but no error page was found at {error_page_path}.")
 
     def respond_file(self,code:int,filename:str) -> None:
         """
@@ -108,6 +120,8 @@ class Handler(BaseHTTPRequestHandler):
         if headers:
             for header, value in headers.items():
                 self.send_header(header, value)
+        self.send_header("Content-type", "text/html")
+        self.send_header("Content-length", len(message))
         self.end_headers()
         if message:
             self.wfile.write(message.encode())
@@ -226,8 +240,13 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 self.error(404, message=self.path)
         except Exception as e:
-            print_exc(e)
-            self.error(500, message=str(e))
+            if self.debug:
+                print_exc(e)
+            self.error(
+                code = 500,
+                message = str(e),
+                traceback = format_exc() if self.debug else ""
+            )
             return
 
 
@@ -252,8 +271,13 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 self.error(404, message=self.path)
         except Exception as e:
-            print_exc(e)
-            self.error(500, message=str(e))
+            if self.debug:
+                print_exc(e)
+            self.error(
+                code = 500,
+                message = str(e),
+                traceback = format_exc() if self.debug else ""
+            )
             return
 
     def do_PUT(self):
@@ -277,8 +301,13 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 self.error(404, message=self.path)
         except Exception as e:
-            print_exc(e)
-            self.error(500, message=str(e))
+            if self.debug:
+                print_exc(e)
+            self.error(
+                code = 500,
+                message = str(e),
+                traceback = format_exc() if self.debug else ""
+            )
             return
 
     def do_DELETE(self):
@@ -302,8 +331,13 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 self.error(404, message=self.path)
         except Exception as e:
-            print_exc(e)
-            self.error(500, message=str(e))
+            if self.debug:
+                print_exc(e)
+            self.error(
+                code = 500,
+                message = str(e),
+                traceback = format_exc() if self.debug else ""
+            )
             return
 
     def do_PATCH(self):
@@ -327,8 +361,13 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 self.error(404, message=self.path)
         except Exception as e:
-            print_exc(e)
-            self.error(500, message=str(e))
+            if self.debug:
+                print_exc(e)
+            self.error(
+                code = 500,
+                message = str(e),
+                traceback = format_exc() if self.debug else ""
+            )
             return
 
     def do_OPTIONS(self):
@@ -352,8 +391,13 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 self.error(404, message=self.path)
         except Exception as e:
-            print_exc(e)
-            self.error(500, message=str(e))
+            if self.debug:
+                print_exc(e)
+            self.error(
+                code = 500,
+                message = str(e),
+                traceback = format_exc() if self.debug else ""
+            )
             return
 
     def do_HEAD(self):
@@ -377,8 +421,13 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 self.error(404, message=self.path)
         except Exception as e:
-            print_exc(e)
-            self.error(500, message=self.path, exception=e)
+            if self.debug:
+                print_exc(e)
+            self.error(
+                code = 500,
+                message = str(e),
+                traceback = format_exc() if self.debug else ""
+            )
             return
 
     def do_TRACE(self):
@@ -402,8 +451,13 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 self.error(404, message=self.path)
         except Exception as e:
-            print_exc(e)
-            self.error(500, message=str(e))
+            if self.debug:
+                print_exc(e)
+            self.error(
+                code = 500,
+                message = str(e),
+                traceback = format_exc() if self.debug else ""
+            )
             return
 
 
@@ -434,6 +488,7 @@ class Server:
         self.port = port
         self.debug = debug
         self.handler = Handler
+        self.handler.debug = debug
         self.handler.page_dir = page_dir
         self.handler.error_dir = error_dir
 
