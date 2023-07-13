@@ -1,7 +1,7 @@
 
 # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
 
-def SEND_RESPONSE_CODE(code:int,path:str="") -> str:
+def SEND_RESPONSE_CODE(code:int, path:str="", send_traceback:bool=False) -> str:
     """
     Used explicitly for error code responses (400-599) for now.
     Informational responses should be header-only,
@@ -55,7 +55,7 @@ def generate_html(code:int,title:str,body:str,include_explanation:bool=True) -> 
 <body>
     <h1>{body}</h1>
     <img src="https://http.cat/{code}.jpg" alt="{title}" />
-    {explanation}
+    <p>{explanation}</p>
 </body>
 </html>"""
 
