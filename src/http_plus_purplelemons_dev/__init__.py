@@ -1,6 +1,6 @@
 
 """
-Example project structure:
+## Example project structure:
 ```txt
 ./Main Folder
     /server.py
@@ -18,13 +18,13 @@ Example project structure:
             .js
         ...
 ```
-In order to access `/`, the server will look for `./pages/.html`.
+In order to access the url `/`, the server will look for `./pages/.html`.
 Smiliarly, requests to `/subfolder` will look for `./pages/subfolder/.html`.
 
 You can customize error pages by creating a folder in `./errors` with the name of the error code.
 """
 
-__dev_version__ = "0.0.18"
+__dev_version__ = "0.0.19"
 __version__ = __dev_version__
 
 
@@ -469,53 +469,62 @@ class Server:
         for example `@server.get("/")`.
     """
 
-    def __init__(self, host:str="127.0.0.1", port:int=8080, /, *, page_dir:str="./pages", error_dir="./errors", debug:bool=False, **kwargs):
+    def __init__(self, /, *, page_dir:str="./pages", error_dir="./errors", debug:bool=False, **kwargs):
         """
-        Initializes the server.
+        Listen to HTTP methods with `@server.<method>(path)`, for example...
+        ```
+        @server.get("/")
+        def _(req, res):
+            return res.send("Hello, world!")
+        ```
+        More about the `req` and `res` objects can be found in `http_plus.communications`.
         
         Args:
-            `host (str)`: The host to listen on. Defaults to all interfaces.
-
-            `port (int)`: The port to listen on. Defaults to 80.
-
             `page_dir (str)`: The directory to serve pages from.
 
             `error_dir (str)`: The directory to serve error pages from.
 
             `debug (bool)`: Whether or not to print debug messages.
         """
-        self.host = host
-        self.port = port
         self.debug = debug
         self.handler = Handler
         self.handler.debug = debug
         self.handler.page_dir = page_dir
         self.handler.error_dir = error_dir
 
-    def listen(self) -> None:
-        """Starts the server, a blocking loop on the current thread."""
+    def listen(self, port:int, ip:str=None) -> None:
+        """
+        Starts the server, a blocking loop on the current thread.
+        The IP will default to all interfaces (`0.0.0.0`) if not specified, unless if the
+        server was initialized with `debug=True`, in which case it will default to loopback
+        (`127.0.0.1`).
+
+        Args:
+            `port (int)`: The port to listen on. Must be available, otherwise the server will raise a binding error.
+
+            `ip (str)`: String in the form of an IP address to listen on. Must be an address on the current machine.
+        """
         if self.debug:
-            print(f"Listening on http://{self.host}{':'+str(self.port) if self.port != 80 else ''}/")
+            print(f"Listening on http://{self.ip}{':'+str(self.port) if self.port != 80 else ''}/")
+            if ip is None:
+                # Debug and no IP specified, use loopback
+                ip = "127.0.0.1"
+        elif ip is None:
+            # No debug and no IP specified, use all interfaces
+            ip = "0.0.0.0"
         try:
-            HTTPServer((self.host, self.port), self.handler).serve_forever()
+            HTTPServer((ip,port), self.handler).serve_forever()
         except KeyboardInterrupt:
-            print("Server stopped.")
+            print("\nServer stopped.")
         except Exception as e:
             print(f"Server error: {e}")
 
-
-    def base(self, request: Request, response: Response, **kwargs) -> Response:
-        """
-        Should be overridden.
-        Args:
-            `request (Request)`: The request object.
-            `response (Response)`: The response object.
-            `**kwargs`: Arguments passed in by the route (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
-        """
-        return response
-
     def all(self, path:str):
-        """A decorator that adds a route to the server. Listens to all HTTP methods.
+        """
+        A decorator that adds a route to the server. Listens to all HTTP methods.
+
+        If you use a keyword wildcard in the route url, arguments will be passed into
+        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             `path (str)`: The path to respond to.
@@ -529,7 +538,11 @@ class Server:
         return decorator
 
     def stream(self, path:str):
-        """A decorator that adds a route to the server. Listens to all HTTP methods.
+        """
+        A decorator that adds a route to the server. Listens *ONLY* to GET requests.
+
+        If you use a keyword wildcard in the route url, arguments will be passed into
+        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             `path (str)`: The path to respond to.
@@ -542,7 +555,11 @@ class Server:
         return decorator
 
     def get(self, path:str):
-        """A decorator that adds a route to the server. Listens to GET requests.
+        """
+        A decorator that adds a route to the server. Listens to GET requests.
+
+        If you use a keyword wildcard in the route url, arguments will be passed into
+        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             `path (str)`: The path to respond to.
@@ -559,7 +576,11 @@ class Server:
         return decorator
 
     def post(self, path:str):
-        """A decorator that adds a route to the server. Listens to POST requests.
+        """
+        A decorator that adds a route to the server. Listens to POST requests.
+
+        If you use a keyword wildcard in the route url, arguments will be passed into
+        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             `path (str)`: The path to respond to.
@@ -572,7 +593,11 @@ class Server:
         return decorator
 
     def put(self, path:str):
-        """A decorator that adds a route to the server. Listens to PUT requests.
+        """
+        A decorator that adds a route to the server. Listens to PUT requests.
+
+        If you use a keyword wildcard in the route url, arguments will be passed into
+        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             `path (str)`: The path to respond to.
@@ -585,7 +610,11 @@ class Server:
         return decorator
 
     def delete(self, path:str):
-        """A decorator that adds a route to the server. Listens to DELETE requests.
+        """
+        A decorator that adds a route to the server. Listens to DELETE requests.
+
+        If you use a keyword wildcard in the route url, arguments will be passed into
+        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             `path (str)`: The path to respond to.
@@ -598,7 +627,11 @@ class Server:
         return decorator
 
     def patch(self, path:str):
-        """A decorator that adds a route to the server. Listens to PATCH requests.
+        """
+        A decorator that adds a route to the server. Listens to PATCH requests.
+
+        If you use a keyword wildcard in the route url, arguments will be passed into
+        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             `path (str)`: The path to respond to.
@@ -611,7 +644,11 @@ class Server:
         return decorator
 
     def options(self, path:str):
-        """A decorator that adds a route to the server. Listens to OPTIONS requests.
+        """
+        A decorator that adds a route to the server. Listens to OPTIONS requests.
+
+        If you use a keyword wildcard in the route url, arguments will be passed into
+        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             `path (str)`: The path to respond to.
@@ -624,7 +661,11 @@ class Server:
         return decorator
 
     def head(self, path:str):
-        """A decorator that adds a route to the server. Listens to HEAD requests.
+        """
+        A decorator that adds a route to the server. Listens to HEAD requests.
+
+        If you use a keyword wildcard in the route url, arguments will be passed into
+        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             `path (str)`: The path to respond to.
@@ -637,7 +678,11 @@ class Server:
         return decorator
 
     def trace(self, path:str):
-        """A decorator that adds a route to the server. Listens to TRACE requests.
+        """
+        A decorator that adds a route to the server. Listens to TRACE requests.
+
+        If you use a keyword wildcard in the route url, arguments will be passed into
+        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             `path (str)`: The path to respond to.
@@ -651,7 +696,9 @@ class Server:
 
 
 def init():
-    """Initializes the current directory for HTTP+"""
+    """
+    Initializes the current directory for HTTP+
+    """
     import os
     if not os.path.exists("pages"):
         os.mkdir("pages")

@@ -8,6 +8,11 @@ Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-5/-6. 
 ## Developmental (0.0.X)
 2023/01/16-
 
+### v0.0.19 (2023/07/13 18:21)
+* `Server.listen()` now accepts optional IP and port (the IP will default to `127.0.0.1` if `debug:bool` is `True`, otherwise it listens on all interfaces via `0.0.0.0`).
+* General documentation improvement (especially the `Server` class).
+* Removed `Server.base()` because it isn't being used anywhere ¯\\\_(ツ)_/¯
+
 ### v0.0.18 (2023/07/13 14:45)
 * `SEND_RESPONSE_CODE` and `Handler.error()` now accept the `traceback:str` parameter. An error explanation is already sent, but the traceback can be optionally supplied by setting `debug:bool=True` in the `Server()` constructor.
 * `Handler.respond()` now sends `Content-length` & `Content-type`. This should have been fixed in v0.0.15, but was overlooked.
