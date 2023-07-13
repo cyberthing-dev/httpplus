@@ -178,6 +178,37 @@ class Response:
             self.body = body
         self.set_header("Content-Length", len(self.body))
         return self
+    
+    def send_file(self, path:str) -> "Response":
+        """
+        Serves a file to the client. This is useful if you want to do backend logic before sending a file.
+
+        Args:
+            `path (str)`: The path to the file to send.
+        """
+        with open(path, "rb") as f:
+            # .decode() could be more efficient because we .encode() later.
+            self.body = f.read().decode()
+        self.set_header("Content-Length", len(self.body))
+        return self
+    
+    def prompt_download(self, path:str, filename:str=None) -> "Response":
+        """
+        Prompts a file download!
+
+        Args:
+            `path (str)`: The path to the file to send.
+
+            `filename (str)`: The name of the file that the client receives.
+             This can be different from what's at `path`.
+             Defaults to the filename of the file at `path`.
+        """
+        if filename is None:
+            filename = path.split("/")[-1]
+        self.set_header("Content-Disposition", f"attachment; filename={filename}")
+        # this is pretty clever, eh? eh?
+        self.send_file(path)
+        return self
 
     def status(self,code:int) -> "Response":
         """

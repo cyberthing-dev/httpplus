@@ -66,4 +66,12 @@ def _(req:http_plus.Request, res:http_plus.Response):
         "token": token
     })
 
+@server.get("/send_file")
+def _(req:http_plus.Request, res:http_plus.Response):
+    return res.send_file("test.txt")
+
+@server.get("/prompt_download")
+def _(req:http_plus.Request, res:http_plus.Response):
+    return res.prompt_download("test.txt")
+
 server.listen()
