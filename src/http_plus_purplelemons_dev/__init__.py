@@ -23,7 +23,7 @@ Smiliarly, requests to `/subfolder` will look for `./pages/subfolder/.html`.
 You can customize error pages by creating a folder in `./errors` with the name of the error code.
 """
 
-__dev_version__ = "0.0.16"
+__dev_version__ = "0.0.17"
 __version__ = __dev_version__
 
 

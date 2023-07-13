@@ -8,6 +8,10 @@ Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-5/-6. 
 ## Developmental (0.0.X)
 2023/01/16-
 
+### v0.0.17 (2023/07/13 01:14)
+* `Response.send_file()` will serve some file at the given path.
+* `Response.prompt_download()` will prompt the client to recieve a download.
+
 ### v0.0.16 (2023/07/12)
 * Moved TODOs to github issues.
 
