@@ -8,6 +8,10 @@ Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-5/-6. 
 ## Developmental (0.0.X)
 2023/01/16-
 
+### v0.0.18 (2023/07/13 14:45)
+* `SEND_RESPONSE_CODE` and `Handler.error()` now accept the `traceback:str` parameter. An error explanation is already sent, but the traceback can be optionally supplied by setting `debug:bool=True` in the `Server()` constructor.
+* `Handler.respond()` now sends `Content-length` & `Content-type`. This should have been fixed in v0.0.15, but was overlooked.
+
 ### v0.0.17 (2023/07/13 01:14)
 * `Response.send_file()` will serve some file at the given path.
 * `Response.prompt_download()` will prompt the client to recieve a download.

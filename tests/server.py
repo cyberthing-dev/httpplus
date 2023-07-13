@@ -74,4 +74,9 @@ def _(req:http_plus.Request, res:http_plus.Response):
 def _(req:http_plus.Request, res:http_plus.Response):
     return res.prompt_download("test.txt")
 
+@server.get("/error_test")
+def _(req:http_plus.Request, res:http_plus.Response):
+    0/0
+    return res.set_body("Hello, error_test!")
+
 server.listen()
