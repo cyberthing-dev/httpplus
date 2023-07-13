@@ -2,7 +2,7 @@
 import http_plus_purplelemons_dev as http_plus
 from time import sleep
 
-server = http_plus.Server("0.0.0.0", 8000, debug=True)
+server = http_plus.Server(debug=True)
 
 auth = http_plus.Auth()
 
@@ -79,4 +79,4 @@ def _(req:http_plus.Request, res:http_plus.Response):
     0/0
     return res.set_body("Hello, error_test!")
 
-server.listen()
+server.listen(8000)
