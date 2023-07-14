@@ -1,12 +1,17 @@
 # Changelog
 
-Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-5/-6. (I've lived in America my whole life, don't @ me, using YYYY/MM/DD is hard enough)
-* [Developmental](#developmental-00x) -- This stage will end when I finish implementing all the features I want to. Found in [src/http_plus_purplelemons_dev](./src/http_plus_purplelemons_dev).
-* [Pre-release](#) -- This stage will end when I finish gathering feedback from the community and adding new features.
+Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-0500/-0600. (I've lived in America my whole life, don't @ me, using YYYY/MM/DD is hard enough)
+* [Developmental](#developmental-00x) -- This stage will end when I finish implementing all the features I want to. Found in [src/http_plus_purplelemons_dev](./src/http_plus_purplelemons_dev). Changes can be tracked [here](https://github.com/orgs/cyberthing-dev/projects/2/views/1).
+* [Pre-release](#) -- This stage will end when I finish gathering feedback from the community and adding new features. Changes can be tracked [here](https://github.com/orgs/cyberthing-dev/projects/3/views/1).
 * [Release](#) -- This stage will be continuous and offer bug fixes, maybe new features.
 
 ## Developmental (0.0.X)
-2023/01/16-
+2023/01/16-2023/07/17
+
+### v0.0.20 (2023/07/13 21:51)
+* Backticks (`) have been removed from wrapping parameter names in method docstrings, which prevented code editors from properly displaying type hints/parameter descriptions.
+* `communications.Response` is now compatable with Windows file paths now.
+* Changelog now has an end date for developmental versions and links to project tracker.
 
 ### v0.0.19 (2023/07/13 18:21)
 * `Server.listen()` now accepts optional IP and port (the IP will default to `127.0.0.1` if `debug:bool` is `True`, otherwise it listens on all interfaces via `0.0.0.0`).
