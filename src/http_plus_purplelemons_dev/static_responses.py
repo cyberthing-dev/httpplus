@@ -73,165 +73,231 @@ def generate_html(code:int, title:str, body:str, traceback:str, include_explanat
 
 # Client error responses 400-499
 def _400(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 400 error page."""
+    """
+    Returns the HTML for the 400 error page.
+    """
     message = f'"{path}"' if path else "The endpoint you were looking for"
     return generate_html(400,"Bad Request",f"{message} could not be understood by the server.", *args, **kwargs)
 
 def _401(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 401 error page."""
+    """
+    Returns the HTML for the 401 error page.
+    """
     message = f'"{path}"' if path else "this page."
     return generate_html(401,"Unauthorized",f"You are not authorized to access {message}", *args, **kwargs)
 
 def _403(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 403 error page."""
+    """
+    Returns the HTML for the 403 error page.
+    """
     message = f'"{path}"' if path else "this page."
     return generate_html(403,"Forbidden",f"You are forbidden from accessing {message}", *args, **kwargs)
 
 def _404(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 404 error page."""
+    """
+    Returns the HTML for the 404 error page.
+    """
     message = f'"{path}"' if path else "The page you were looking for"
     return generate_html(404,"Not Found", f"{message} could not be found.", *args, **kwargs)
 
 def _405(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 405 error page."""
+    """
+    Returns the HTML for the 405 error page.
+    """
     message = f'"{path}"' if path else "this page"
     return generate_html(405,"Method Not Allowed",f"The method you requested to access {message} is not allowed.", *args, **kwargs)
 
 def _406(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 406 error page."""
+    """
+    Returns the HTML for the 406 error page.
+    """
     message = f'"{path}"' if path else "this page."
     return generate_html(406,"Not Acceptable",f"The server cannot provide a response that is acceptable to the client for {message}", *args, **kwargs)
 
 def _407(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 407 error page."""
+    """
+    Returns the HTML for the 407 error page.
+    """
     message = f'"{path}"' if path else "The endpoint you were looking for"
     return generate_html(407,"Proxy Authentication Required",f"{message} requires authentication from a proxy server.", *args, **kwargs)
 
 def _408(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 408 error page."""
+    """
+    Returns the HTML for the 408 error page.
+    """
     message = f'"{path}"' if path else "The endpoint"
     return generate_html(408,"Request Timeout",f"{message} did not receive a response from the client in time.", *args, **kwargs)
 
 def _409(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 409 error page."""
+    """
+    Returns the HTML for the 409 error page.
+    """
     message = f'"{path}"' if path else "Your request"
     return generate_html(409,"Conflict",f"{message} experienced a conflict with the server while processing.", *args, **kwargs)
 
 def _410(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 410 error page."""
+    """
+    Returns the HTML for the 410 error page.
+    """
     message = f'"{path}"' if path else "The page you were looking for"
     return generate_html(410,"Gone",f"{message} is no longer available and has been permenantly deleted.", *args, **kwargs)
 
 def _411(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 411 error page."""
+    """
+    Returns the HTML for the 411 error page.
+    """
     message = f'"{path}"' if path else "The endpoint you were looking for"
     return generate_html(411,"Length Required",f"{message} requires a Content-Length header to be sent with the request.", *args, **kwargs)
 
 def _412(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 412 error page."""
+    """
+    Returns the HTML for the 412 error page.
+    """
     message = f'"{path}"' if path else "the endpoint."
     return generate_html(412,"Precondition Failed",f"The server failed the precondition check(s) you supplied in your request for {message}", *args, **kwargs)
 
 def _413(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 413 error page."""
+    """
+    Returns the HTML for the 413 error page.
+    """
     message = f'"{path}"' if path else "The request"
     return generate_html(413,"Payload Too Large",f"{message} was too large for the server to process.", *args, **kwargs)
 
 def _414(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 414 error page."""
+    """
+    Returns the HTML for the 414 error page.
+    """
     return generate_html(414,"URI Too Long",f"The requested URI was too long for the server to process.", *args, **kwargs)
 
 def _415(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 415 error page."""
+    """
+    Returns the HTML for the 415 error page.
+    """
     message = f'"{path}"' if path else "this page."
     return generate_html(415,"Unsupported Media Type",f"The server does not support the media type you requested for {message}", *args, **kwargs)
 
 def _416(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 416 error page."""
+    """
+    Returns the HTML for the 416 error page.
+    """
     message = f'"{path}"' if path else "The requested `Range` header"
     return generate_html(416,"Range Not Satisfiable",f"{message} is not satisfiable.", *args, **kwargs)
 
 def _417(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 417 error page."""
+    """
+    Returns the HTML for the 417 error page.
+    """
     message = f'"{path}"' if path else "The requested `Expect` header"
     return generate_html(417,"Expectation Failed",f"{message} failed to meet the expectations of the server.", *args, **kwargs)
 
 def _418(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 418 error page."""
+    """
+    Returns the HTML for the 418 error page.
+    """
     return generate_html(418,"I'm a teapot",f"The server is apparently a teapot.",include_explanation=False, *args, **kwargs)
 
 def _421(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 421 error page."""
+    """
+    Returns the HTML for the 421 error page.
+    """
     message = f'"{path}"' if path else "The requested `Host` header"
     return generate_html(421,"Misdirected Request",f"{message} is misdirected at a server that cannot produce a response. This response if from a server that is designed to handle requests for multiple domains.",include_explanation=False, *args, **kwargs)
 
 def _426(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 426 error page."""
+    """
+    Returns the HTML for the 426 error page.
+    """
     message = f'"{path}"' if path else "this endpoint"
     return generate_html(426,"Upgrade Required",f"The protocol used for requesting {message} is not supported, but newer versions may be.", *args, **kwargs)
 
 def _428(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 428 error page."""
+    """
+    Returns the HTML for the 428 error page.
+    """
     message = f'"{path}"' if path else "the endpoint"
     return generate_html(428,"Precondition Required",f"Your request for {message} must include a `If-Match` header.", *args, **kwargs)
 
 def _429(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 429 error page."""
+    """
+    Returns the HTML for the 429 error page.
+    """
     message = f'"{path}"' if path else "this endpoint"
     return generate_html(429,"Too Many Requests",f"You have sent too many requests to {message} in a given amount of time.", *args, **kwargs)
 
 def _431(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 431 error page."""
+    """
+    Returns the HTML for the 431 error page.
+    """
     message = f'"{path}"' if path else "this endpoint"
     return generate_html(431,"Request Header Fields Too Large",f" Your request for {message} contained too many header fields.", *args, **kwargs)
 
 def _451(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 451 error page."""
+    """
+    Returns the HTML for the 451 error page.
+    """
     message = f'"{path}"' if path else "This endpoint"
     return generate_html(451,"Unavailable For Legal Reasons",f"{message} is unavailable due to legal reasons.", *args, **kwargs)
 
 # Server error responses 500-599
 def _500(path:str="", /, exception:str=None, *args, **kwargs) -> str:
-    """Returns the HTML for the 500 error page."""
+    """
+    Returns the HTML for the 500 error page.
+    """
     message = f'"{path}"' if path else "The page you were looking for"
     return generate_html(500,"Internal Server Error",f"{message} experienced an error during internal processing." + (f" Error: {exception}" if exception else ""), *args, **kwargs)
 
 def _501(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 501 error page."""
+    """
+    Returns the HTML for the 501 error page.
+    """
     message = f'"{path}"' if path else "the page you were looking for"
     return generate_html(501,"Not Implemented",f"The request method for {message} is not implemented.", *args, **kwargs)
 
 def _502(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 502 error page."""
+    """
+    Returns the HTML for the 502 error page.
+    """
     message = f'"{path}"' if path else "The page you were looking for"
     return generate_html(502,"Bad Gateway",f"{message} received an invalid response from an upstream server.", *args, **kwargs)
 
 def _503(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 503 error page."""
+    """
+    Returns the HTML for the 503 error page.
+    """
     message = f'"{path}"' if path else "The page you were looking for"
     return generate_html(503,"Service Unavailable",f"{message} is currently unavailable.", *args, **kwargs)
 
 def _504(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 504 error page."""
+    """
+    Returns the HTML for the 504 error page.
+    """
     message = f'"{path}"' if path else "The page you were looking for"
     return generate_html(504,"Gateway Timeout",f"{message} did not receive a response from an upstream server in time.", *args, **kwargs)
 
 def _505(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 505 error page."""
+    """
+    Returns the HTML for the 505 error page.
+    """
     message = f'"{path}"' if path else "the page"
     return generate_html(505,"HTTP Version Not Supported",f"Your request for {message} asked for an unsupported HTTP version.", *args, **kwargs)
 
 def _506(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 506 error page."""
+    """
+    Returns the HTML for the 506 error page.
+    """
     message = f'"{path}"' if path else "The endpoint"
     return generate_html(506,"Variant Also Negotiates",f"{message} is configured to negotiate content, but the server is unable to do so.", *args, **kwargs)
 
 def _510(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 510 error page."""
+    """
+    Returns the HTML for the 510 error page.
+    """
     message = f'"{path}"' if path else "The page you were looking for"
     return generate_html(510,"Not Extended",f"{message} requires a proxy/extension to process the request, but the proxy is not configured to do so.", *args, **kwargs)
 
 def _511(path:str="", *args, **kwargs) -> str:
-    """Returns the HTML for the 511 error page."""
+    """
+    Returns the HTML for the 511 error page.
+    """
     message = f'"{path}"' if path else "The page you were looking for"
     return generate_html(511,"Network Authentication Required",f"{message} requires <em>network</em> authentication to access.", *args, **kwargs)

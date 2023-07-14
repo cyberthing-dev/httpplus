@@ -24,7 +24,7 @@ Smiliarly, requests to `/subfolder` will look for `./pages/subfolder/.html`.
 You can customize error pages by creating a folder in `./errors` with the name of the error code.
 """
 
-__dev_version__ = "0.0.19"
+__dev_version__ = "0.0.20"
 __version__ = __dev_version__
 
 
@@ -99,8 +99,8 @@ class Handler(BaseHTTPRequestHandler):
         The filename (filepath) must be relative to the root directory of the server.
 
         Args:
-            `code (int)`: The HTTP status code to respond with.
-            `filename (str)`: The file to respond with.
+            code (int): The HTTP status code to respond with.
+            filename (str): The file to respond with.
         """
         self.send_response(code)
         self.send_header("Content-type", detect_content_type(filename))
@@ -113,8 +113,8 @@ class Handler(BaseHTTPRequestHandler):
         """Responds to the client with a message custom message. See `respond_file` for the prefered response method.
 
         Args:
-            `code (int)`: The HTTP status code to respond with.
-            `message (str)`: The message to respond with.
+            code (int): The HTTP status code to respond with.
+            message (str): The message to respond with.
         """
         self.send_response(code)
         if headers:
@@ -141,10 +141,10 @@ class Handler(BaseHTTPRequestHandler):
         """Checks if a given `path` from a request matches a given `route` from a predefined route.
 
         Args:
-            `path (str)`: The path from the request.
-            `route (str)`: The route from the predefined route.
+            path (str): The path from the request.
+            route (str): The route from the predefined route.
         Returns:
-            `tuple[bool,dict[str,str]]`: A tuple containing a boolean value indicating whether the path
+            tuple[bool,dict[str,str]]: A tuple containing a boolean value indicating whether the path
             matches the route, and a dictionary containing the keyword variables from the route.
         """
         if len(path.split("/")) == len(route.split("/")):
@@ -189,9 +189,9 @@ class Handler(BaseHTTPRequestHandler):
         Returns the filename of a path. If the path is not a file, returns `None`.
 
         Args:
-            `path (str)`: The requested uri path.
+            path (str): The requested uri path.
         Returns:
-            `str|None`: The path to the desired file, or `None` if the file does not exist.
+            str|None: The path to the desired file, or `None` if the file does not exist.
         """
         # Search for files in the form `pages/path/.html`
         target = f"pages{path}/.html"
@@ -480,11 +480,9 @@ class Server:
         More about the `req` and `res` objects can be found in `http_plus.communications`.
         
         Args:
-            `page_dir (str)`: The directory to serve pages from.
-
-            `error_dir (str)`: The directory to serve error pages from.
-
-            `debug (bool)`: Whether or not to print debug messages.
+            page_dir (str): The directory to serve pages from.
+            error_dir (str): The directory to serve error pages from.
+            debug (bool): Whether or not to print debug messages.
         """
         self.debug = debug
         self.handler = Handler
@@ -500,9 +498,8 @@ class Server:
         (`127.0.0.1`).
 
         Args:
-            `port (int)`: The port to listen on. Must be available, otherwise the server will raise a binding error.
-
-            `ip (str)`: String in the form of an IP address to listen on. Must be an address on the current machine.
+            port (int): The port to listen on. Must be available, otherwise the server will raise a binding error.
+            ip (str): String in the form of an IP address to listen on. Must be an address on the current machine.
         """
         if self.debug:
             print(f"Listening on http://{self.ip}{':'+str(self.port) if self.port != 80 else ''}/")
@@ -527,7 +524,7 @@ class Server:
         the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
-            `path (str)`: The path to respond to.
+            path (str): The path to respond to.
         """
         def decorator(func):
             for method in (self.get, self.post, self.put, self.delete, self.options, self.head, self.trace):
@@ -545,7 +542,7 @@ class Server:
         the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
-            `path (str)`: The path to respond to.
+            path (str): The path to respond to.
         """
         def decorator(func):
             try:
@@ -562,7 +559,7 @@ class Server:
         the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
-            `path (str)`: The path to respond to.
+            path (str): The path to respond to.
         """
         def decorator(func):
             try:
@@ -583,7 +580,7 @@ class Server:
         the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
-            `path (str)`: The path to respond to.
+            path (str): The path to respond to.
         """
         def decorator(func):
             try:
@@ -600,7 +597,7 @@ class Server:
         the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
-            `path (str)`: The path to respond to.
+            path (str): The path to respond to.
         """
         def decorator(func):
             try:
@@ -617,7 +614,7 @@ class Server:
         the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
-            `path (str)`: The path to respond to.
+            path (str): The path to respond to.
         """
         def decorator(func):
             try:
@@ -634,7 +631,7 @@ class Server:
         the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
-            `path (str)`: The path to respond to.
+            path (str): The path to respond to.
         """
         def decorator(func):
             try:
@@ -651,7 +648,7 @@ class Server:
         the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
-            `path (str)`: The path to respond to.
+            path (str): The path to respond to.
         """
         def decorator(func):
             try:
@@ -668,7 +665,7 @@ class Server:
         the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
-            `path (str)`: The path to respond to.
+            path (str): The path to respond to.
         """
         def decorator(func):
             try:
@@ -685,7 +682,7 @@ class Server:
         the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
-            `path (str)`: The path to respond to.
+            path (str): The path to respond to.
         """
         def decorator(func):
             try:

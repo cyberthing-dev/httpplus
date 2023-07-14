@@ -7,18 +7,20 @@ from json import dumps, loads
 from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler
 from typing import Any
+from platform import system as detect_os
 
 class RouteExistsError(Exception):
-    """Raised when a route already exists."""
     def __init__(self, route:str=...):
+        """
+        Raised when a route already exists.
+        """
         super().__init__(f"Route {route} already exists." if route else "Route already exists.")
 
 class Event:
-    """
-    Used for streaming events to the client. Set up a listener with `http_plus.stream(path=str)`
-    """
-
     def __init__(self, data:str, event_name:str=None, id:str=None):
+        """
+        Used for streaming events to the client. Set up a listener with `http_plus.stream(path=str)`
+        """
         self.data = data
         self.event_name = event_name
         self.id = id
@@ -38,17 +40,19 @@ class Route:
     """Custom dataclass for optimizing route creation, readability, and resolution.
 
     Attributes:
-        `send_to (str)`: The directory to respond with in the form of `./path/to/directory/`, `path/to/file.ext`, etc..
-        `route_type (str)`: The type of route. Can be either `pages`, `errors`, or `static`.
-        `content (str)`: The content to respond with. Only used for `static` routes.
-        `content_type (str)`: The content type to respond with. Only used for `static` routes.
+        send_to (str): The directory to respond with in the form of `./path/to/directory/`, `path/to/file.ext`, etc..
+        route_type (str): The type of route. Can be either `pages`, `errors`, or `static`.
+        content (str): The content to respond with. Only used for `static` routes.
+        content_type (str): The content type to respond with. Only used for `static` routes.
     """
     send_to:str
     route_type:str
 
     @property
     def full_path(self) -> str:
-        """Returns the full path to the file to respond with."""
+        """
+        Returns the full path to the file to respond with.
+        """
         return f"./{self.route_type}{self.send_to}"
 
 class Request:
@@ -167,7 +171,7 @@ class Response:
         Will be overwritten if `Response` is returned from the HTTP method listener function.
 
         Args:
-            `body (bytes|str|dict)`: The body of the response.
+            body (bytes|str|dict): The body of the response.
         """
         if isinstance(body, dict):
             self.set_header("Content-Type", "application/json")
@@ -184,7 +188,7 @@ class Response:
         Serves a file to the client. This is useful if you want to do backend logic before sending a file.
 
         Args:
-            `path (str)`: The path to the file to send.
+            path (str): The path to the file to send.
         """
         with open(path, "rb") as f:
             # .decode() could be more efficient because we .encode() later.
@@ -197,14 +201,16 @@ class Response:
         Prompts a file download!
 
         Args:
-            `path (str)`: The path to the file to send.
-
-            `filename (str)`: The name of the file that the client receives.
+            path (str): The path to the file to send.
+            filename (str): The name of the file that the client receives.
              This can be different from what's at `path`.
              Defaults to the filename of the file at `path`.
         """
         if filename is None:
-            filename = path.split("/")[-1]
+            if detect_os() == "Windows":
+                filename = path.split("\\")[-1]
+            else:
+                filename = path.split("/")[-1]
         self.set_header("Content-Disposition", f"attachment; filename={filename}")
         # this is pretty clever, eh? eh?
         self.send_file(path)
@@ -215,7 +221,7 @@ class Response:
         Sets the status code of the response.
 
         Args:
-            `code (int)`: The status code to set.
+            code (int): The status code to set.
         """
         self.status_code = code
         return self
@@ -225,7 +231,7 @@ class Response:
         Will redirect client to the specified destination.
 
         Args:
-            `to (str)`: The path to route to.
+            to (str): The path to route to.
         """
         self.headers["Location"] = to
         self.status_code = 302 # Found == temporary redirect
@@ -260,9 +266,9 @@ class StreamResponse(Response):
         `data` should be a string. Use `json.dumps()` to convert a dict or list to a string.
 
         Args:
-            `data (str)`: The data to stream to the client.
-            `event (str)`: The event to send the data as. Defaults to `"message"`. Listen to the event on the client with `EventSource.addEventListener(event_name, callback)`.
-
-            `id (int)`: The id of the event. Defaults to `None`. Listen to the event on the client with `EventSource.addEventListener(event_name, callback, { id: event_id })`.
+            data (str): The data to stream to the client.
+            event_name (str): The event to send the data as. Defaults to `"message"`. Listen to the event on the client with `EventSource.addEventListener(event_name, callback)`.
+            id (int): The id of the event. Defaults to `None`.
+             Listen to the event on the client with `EventSource.addEventListener(event_name, callback, { id: event_id })`.
         """
         return Event(data, event_name, id)

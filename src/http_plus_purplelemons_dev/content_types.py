@@ -66,9 +66,9 @@ def detect_content_type(filename:str) -> str:
     Detects the content type of a file based on the file extension.
 
     Args:
-        `filename (str)`: The name of the file to detect.
+        filename (str): The name of the file to detect.
     Returns:
-        `str`: The content type of the file.
+        str: The content type of the file.
     """
     try:
         return TYPES[filename.split(".")[-1]]
