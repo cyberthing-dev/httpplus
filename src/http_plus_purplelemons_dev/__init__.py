@@ -24,7 +24,7 @@ Smiliarly, requests to `/subfolder` will look for `./pages/subfolder/.html`.
 You can customize error pages by creating a folder in `./errors` with the name of the error code.
 """
 
-__dev_version__ = "0.0.21"
+__dev_version__ = "0.0.22"
 __version__ = __dev_version__
 
 
@@ -126,7 +126,6 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Content-length", len(message))
         self.end_headers()
         if message:
-            print(f"sending message: {message}")
             self.wfile.write(message.encode())
 
     def resolve_path(self,method:str,path:str) -> str:
@@ -187,22 +186,26 @@ class Handler(BaseHTTPRequestHandler):
         return False, {}
 
     @staticmethod
-    def serve_filename(path:str) -> "str|None":
+    def serve_filename(path:str, target_ext:str="html") -> "str|None":
         """
         Returns the filename of a path. If the path is not a file, returns `None`.
 
         Args:
             path (str): The requested uri path.
+            target_ext (str, optional): The extension of the file to search for. Defaults to "html". Can be html, css, or js.
         Returns:
             str|None: The path to the desired file, or `None` if the file does not exist.
         """
-        # Search for files in the form `pages/path/.html`
-        target = f"pages{path}/.html"
+        # Search for files in the form `pages/path/.ext`
+        target = f"pages{path}/.{target_ext}"
         if not os.path.exists(target):
-            # Search for files in the form `pages/path.html`
-            target = f"pages{path}.html"
+            # Search for files in the form `pages/path.ext`
+            target = f"pages{path}.{target_ext}"
             if not os.path.exists(target):
-                target = None
+                # if all else fails, index is poggers
+                target = f"pages/index.{target_ext}"
+                if not os.path.exists(target):
+                    target = None
         return target
 
     @staticmethod
@@ -211,14 +214,22 @@ class Handler(BaseHTTPRequestHandler):
         Wrapper for creating `do_<METHOD>` methods.
         """
         method_name = http_method.__name__[3:].lower()
-        #http_method.__doc__ = f"Handles {method_name.upper()} requests. Do not modify unless you know what you are doing.\n\nUse the `@server.{method_name.lower()}(path)` decorator instead."
         def method(self:"Handler"):
             try:
                 if method_name == "get":
-                    filename = self.serve_filename(self.path)
-                    if filename is not None:
-                        self.respond_file(200, filename)
-                        return
+                    path = self.path
+                    if "." in path.split("/")[-1]:
+                        extension = path.split("/")[-1].split(".")[-1].lower()
+                        # everything up to the .
+                        path = path[:-len(extension)-1]
+                    else:
+                        # otherwise, assume html
+                        extension = "html"
+                    if extension in ["html", "css", "js"]:
+                        filename = self.serve_filename(path, extension)
+                        if filename is not None:
+                            self.respond_file(200, filename)
+                            return
                 for route_path in self.routes[method_name]:
                     if route_path == self.path:
                         route = self.routes[method_name][route_path]
@@ -340,7 +351,7 @@ class Server:
         def method(self:"Server", path:str):
             def decorator(func:Callable):
                 try:
-                    self.handler.routes[server_wrapper.__name__][path] = func
+                    self.handler.responses[server_wrapper.__name__][path] = func
                 except KeyError:
                     raise RouteExistsError(path)
             return decorator
