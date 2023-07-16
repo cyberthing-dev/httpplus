@@ -24,7 +24,7 @@ Smiliarly, requests to `/subfolder` will look for `./pages/subfolder/.html`.
 You can customize error pages by creating a folder in `./errors` with the name of the error code.
 """
 
-__dev_version__ = "0.0.20"
+__dev_version__ = "0.0.21"
 __version__ = __dev_version__
 
 
@@ -120,10 +120,13 @@ class Handler(BaseHTTPRequestHandler):
         if headers:
             for header, value in headers.items():
                 self.send_header(header, value)
-        self.send_header("Content-type", "text/html")
-        self.send_header("Content-length", len(message))
+        if "Content-type" not in self.headers:
+            self.send_header("Content-type", "text/html")
+        if "Content-length" not in self.headers and message:
+            self.send_header("Content-length", len(message))
         self.end_headers()
         if message:
+            print(f"sending message: {message}")
             self.wfile.write(message.encode())
 
     def resolve_path(self,method:str,path:str) -> str:
@@ -200,266 +203,77 @@ class Handler(BaseHTTPRequestHandler):
             target = f"pages{path}.html"
             if not os.path.exists(target):
                 target = None
-
         return target
 
-    def do_GET(self):
+    @staticmethod
+    def _make_method(http_method:Callable):
         """
-        GET requests. Do not modify unless you know what you are doing.
-
-        Use the `@server.get(path)` decorator instead.
+        Wrapper for creating `do_<METHOD>` methods.
         """
-        try:
-            # try looking for files to serve first
-            filename = self.serve_filename(self.path)
-            if filename is not None:
-                self.respond_file(200, filename)
+        method_name = http_method.__name__[3:].lower()
+        #http_method.__doc__ = f"Handles {method_name.upper()} requests. Do not modify unless you know what you are doing.\n\nUse the `@server.{method_name.lower()}(path)` decorator instead."
+        def method(self:"Handler"):
+            try:
+                if method_name == "get":
+                    filename = self.serve_filename(self.path)
+                    if filename is not None:
+                        self.respond_file(200, filename)
+                        return
+                for route_path in self.routes[method_name]:
+                    if route_path == self.path:
+                        route = self.routes[method_name][route_path]
+                        self.respond_file(200, self.resolve_path(method_name, route.full_path))
+                        return
+                for func_path in self.responses[method_name]:
+                    matched, kwargs = self.match_route(self.path, func_path)
+                    if matched:
+                        response:Response = self.responses[method_name][func_path](Request(self, params=kwargs), Response(self))
+                        response()
+                        return
+                # streams
+                if method_name == "get":
+                    for func_path in self.responses["stream"]:
+                        matched, kwargs = self.match_route(self.path, func_path)
+                        if matched:
+                            self.send_response(200)
+                            self.send_header("Content-Type", "text/event-stream")
+                            self.send_header("Cache-Control", "no-cache")
+                            self.send_header("Connection", "keep-alive")
+                            self.end_headers()
+                            for event in self.responses["stream"][func_path](Request(self, params=kwargs), StreamResponse(self)):
+                                self.wfile.write(event.to_bytes())
+                            return
+                else:
+                    print(f"didnt find {self.path}")
+                    self.error(404, message=self.path)
+            except Exception as e:
+                if self.debug:
+                    print_exc(e)
+                self.error(
+                    code = 500,
+                    message = str(e),
+                    traceback = format_exc() if self.debug else ""
+                )
                 return
-            # try looking for routes to serve second
-            for route_path in self.routes["get"]:
-                if route_path == self.path:
-                    route = self.routes["get"][route_path]
-                    self.respond_file(200, self.resolve_path("get", route.full_path))
-                    return
-            # try functional responses 3rd
-            for func_path in self.responses["get"]:
-                matched, kwargs = self.match_route(self.path, func_path)
-                if matched:
-                    # we execute the response function with the current request and response objects
-                    response:Response = self.responses["get"][func_path](Request(self, params=kwargs), Response(self))
-                    response()
-                    return
-            # try streams 4th
-            for func_path in self.responses["stream"]:
-                matched, kwargs = self.match_route(self.path, func_path)
-                if matched:
-                    self.respond(200, "", {"Content-Type": "text/event-stream"})
-                    for event in self.responses["stream"][func_path](Request(self, params=kwargs), StreamResponse(self)):
-                        self.wfile.write(event.to_bytes())
-                    return
-            else:
-                self.error(404, message=self.path)
-        except Exception as e:
-            if self.debug:
-                print_exc(e)
-            self.error(
-                code = 500,
-                message = str(e),
-                traceback = format_exc() if self.debug else ""
-            )
-            return
+        return method
 
-
-    def do_POST(self):
-        """
-        POST requests. Do not modify unless you know what you are doing.
-
-        Use the `@server.post(path)` decorator instead.
-        """
-        try:
-            for route_path in self.routes["post"]:
-                if route_path == self.path:
-                    route = self.routes["post"][route_path]
-                    self.respond_file(200, self.resolve_path("post",route.full_path))
-                    return
-            for func_path in self.responses["post"]:
-                matched, kwargs = self.match_route(self.path, func_path)
-                if matched:
-                    response:Response = self.responses["post"][func_path](Request(self, params=kwargs), Response(self))
-                    response()
-                    return
-            else:
-                self.error(404, message=self.path)
-        except Exception as e:
-            if self.debug:
-                print_exc(e)
-            self.error(
-                code = 500,
-                message = str(e),
-                traceback = format_exc() if self.debug else ""
-            )
-            return
-
-    def do_PUT(self):
-        """
-        PUT requests. Do not modify unless you know what you are doing.
-
-        Use the `@server.put(path)` decorator instead.
-        """
-        try:
-            for route_path in self.routes["put"]:
-                if route_path == self.path:
-                    route = self.routes["put"][route_path]
-                    self.respond_file(200, self.resolve_path("put", route.full_path))
-                    return
-            for func_path in self.responses["put"]:
-                matched, kwargs = self.match_route(self.path, func_path)
-                if matched:
-                    response:Response = self.responses["put"][func_path](Request(self, params=kwargs), Response(self))
-                    response()
-                    return
-            else:
-                self.error(404, message=self.path)
-        except Exception as e:
-            if self.debug:
-                print_exc(e)
-            self.error(
-                code = 500,
-                message = str(e),
-                traceback = format_exc() if self.debug else ""
-            )
-            return
-
-    def do_DELETE(self):
-        """
-        DELETE requests. Do not modify unless you know what you are doing.
-
-        Use the `@server.delete(path)` decorator instead.
-        """
-        try:
-            for route_path in self.routes["delete"]:
-                if route_path == self.path:
-                    route = self.routes["delete"][route_path]
-                    self.respond_file(200, self.resolve_path("delete", route.full_path))
-                    return
-            for func_path in self.responses["delete"]:
-                matched, kwargs = self.match_route(self.path, func_path)
-                if matched:
-                    response:Response = self.responses["delete"][func_path](Request(self, params=kwargs), Response(self))
-                    response()
-                    return
-            else:
-                self.error(404, message=self.path)
-        except Exception as e:
-            if self.debug:
-                print_exc(e)
-            self.error(
-                code = 500,
-                message = str(e),
-                traceback = format_exc() if self.debug else ""
-            )
-            return
-
-    def do_PATCH(self):
-        """
-        PATCH requests. Do not modify unless you know what you are doing.
-
-        Use the `@server.patch(path)` decorator instead.
-        """
-        try:
-            for route_path in self.routes["patch"]:
-                if route_path == self.path:
-                    route = self.routes["patch"][route_path]
-                    self.respond_file(200, self.resolve_path("patch", route.full_path))
-                    return
-            for func_path in self.responses["patch"]:
-                matched, kwargs = self.match_route(self.path, func_path)
-                if matched:
-                    response:Response = self.responses["patch"][func_path](Request(self, params=kwargs), Response(self))
-                    response()
-                    return
-            else:
-                self.error(404, message=self.path)
-        except Exception as e:
-            if self.debug:
-                print_exc(e)
-            self.error(
-                code = 500,
-                message = str(e),
-                traceback = format_exc() if self.debug else ""
-            )
-            return
-
-    def do_OPTIONS(self):
-        """
-        OPTIONS requests. Do not modify unless you know what you are doing.
-
-        Use the `@server.options(path)` decorator instead.
-        """
-        try:
-            for route_path in self.routes["options"]:
-                if route_path == self.path:
-                    route = self.routes["options"][route_path]
-                    self.respond_file(200, self.resolve_path("options", route.full_path))
-                    return
-            for func_path in self.responses["options"]:
-                matched, kwargs = self.match_route(self.path, func_path)
-                if matched:
-                    response:Response = self.responses["options"][func_path](Request(self, params=kwargs), Response(self))
-                    response()
-                    return
-            else:
-                self.error(404, message=self.path)
-        except Exception as e:
-            if self.debug:
-                print_exc(e)
-            self.error(
-                code = 500,
-                message = str(e),
-                traceback = format_exc() if self.debug else ""
-            )
-            return
-
-    def do_HEAD(self):
-        """
-        HEAD requests. Do not modify unless you know what you are doing.
-
-        Use the `@server.head(path)` decorator instead.
-        """
-        try:
-            for route_path in self.routes["head"]:
-                if route_path == self.path:
-                    route = self.routes["head"][route_path]
-                    self.respond_file(200, self.resolve_path("head", route.full_path))
-                    return
-            for func_path in self.responses["head"]:
-                matched, kwargs = self.match_route(self.path, func_path)
-                if matched:
-                    response:Response = self.responses["head"][func_path](Request(self, params=kwargs), Response(self))
-                    response()
-                    return
-            else:
-                self.error(404, message=self.path)
-        except Exception as e:
-            if self.debug:
-                print_exc(e)
-            self.error(
-                code = 500,
-                message = str(e),
-                traceback = format_exc() if self.debug else ""
-            )
-            return
-
-    def do_TRACE(self):
-        """
-        TRACE requests. Do not modify unless you know what you are doing.
-
-        Use the `@server.trace(path)` decorator instead.
-        """
-        try:
-            for route_path in self.routes["trace"]:
-                if route_path == self.path:
-                    route = self.routes["trace"][route_path]
-                    self.respond_file(200, self.resolve_path("trace", route.full_path))
-                    return
-            for func_path in self.responses["trace"]:
-                matched, kwargs = self.match_route(self.path, func_path)
-                if matched:
-                    response:Response = self.responses["trace"][func_path](Request(self, params=kwargs), Response(self))
-                    response()
-                    return
-            else:
-                self.error(404, message=self.path)
-        except Exception as e:
-            if self.debug:
-                print_exc(e)
-            self.error(
-                code = 500,
-                message = str(e),
-                traceback = format_exc() if self.debug else ""
-            )
-            return
-
+    # it's condensed now! :D
+    @_make_method
+    def do_GET(self): return
+    @_make_method
+    def do_POST(self): return
+    @_make_method
+    def do_PUT(self): return
+    @_make_method
+    def do_DELETE(self): return
+    @_make_method
+    def do_PATCH(self): return
+    @_make_method
+    def do_OPTIONS(self): return
+    @_make_method
+    def do_HEAD(self): return
+    @_make_method
+    def do_TRACE(self): return
 
 class Server:
     """
@@ -502,10 +316,10 @@ class Server:
             ip (str): String in the form of an IP address to listen on. Must be an address on the current machine.
         """
         if self.debug:
-            print(f"Listening on http://{self.ip}{':'+str(self.port) if self.port != 80 else ''}/")
             if ip is None:
                 # Debug and no IP specified, use loopback
                 ip = "127.0.0.1"
+            print(f"Listening on http://{ip}{':'+str(port) if port != 80 else ''}/")
         elif ip is None:
             # No debug and no IP specified, use all interfaces
             ip = "0.0.0.0"
@@ -516,7 +330,23 @@ class Server:
         except Exception as e:
             print(f"Server error: {e}")
 
-    def all(self, path:str):
+    @staticmethod
+    def _make_method(server_wrapper:Callable):
+        """
+        Wrapper for wrapping `@server.<METHOD>` methods.
+        """
+        # can someone confirm if this is a 3rd order function?
+        # if not, idk what this is and lord forgive me for my sins
+        def method(self:"Server", path:str):
+            def decorator(func:Callable):
+                try:
+                    self.handler.routes[server_wrapper.__name__][path] = func
+                except KeyError:
+                    raise RouteExistsError(path)
+            return decorator
+        return method
+
+    def all(self, path:str, exclude:list[str]=[]):
         """
         A decorator that adds a route to the server. Listens to all HTTP methods.
 
@@ -527,7 +357,11 @@ class Server:
             path (str): The path to respond to.
         """
         def decorator(func):
-            for method in (self.get, self.post, self.put, self.delete, self.options, self.head, self.trace):
+            funcs = [self.get, self.post, self.put, self.delete, self.patch, self.options, self.head, self.trace]
+            if exclude:
+                # by far one of my most clever lines of code
+                funcs.remove(*exclude)
+            for method in funcs:
                 try:
                     method(path)(func)
                 except KeyError:
@@ -551,6 +385,7 @@ class Server:
                 raise RouteExistsError(path)
         return decorator
 
+    @_make_method
     def get(self, path:str):
         """
         A decorator that adds a route to the server. Listens to GET requests.
@@ -561,17 +396,8 @@ class Server:
         Args:
             path (str): The path to respond to.
         """
-        def decorator(func):
-            try:
-                # not sure what this does or why none of the other methods do it
-                # just gonna leave it here tho ¯\_(ツ)_/¯
-                if any(Handler.match_route(route, path) for route in self.handler.routes["get"]):
-                    raise RouteExistsError(path)
-                self.handler.responses["get"][path] = func
-            except KeyError:
-                raise RouteExistsError(path)
-        return decorator
 
+    @_make_method
     def post(self, path:str):
         """
         A decorator that adds a route to the server. Listens to POST requests.
@@ -582,13 +408,8 @@ class Server:
         Args:
             path (str): The path to respond to.
         """
-        def decorator(func):
-            try:
-                self.handler.responses["post"][path] = func
-            except KeyError:
-                raise RouteExistsError(path)
-        return decorator
 
+    @_make_method
     def put(self, path:str):
         """
         A decorator that adds a route to the server. Listens to PUT requests.
@@ -599,13 +420,8 @@ class Server:
         Args:
             path (str): The path to respond to.
         """
-        def decorator(func):
-            try:
-                self.handler.responses["put"][path] = func
-            except KeyError:
-                raise RouteExistsError(path)
-        return decorator
 
+    @_make_method
     def delete(self, path:str):
         """
         A decorator that adds a route to the server. Listens to DELETE requests.
@@ -616,13 +432,8 @@ class Server:
         Args:
             path (str): The path to respond to.
         """
-        def decorator(func):
-            try:
-                self.handler.responses["delete"][path] = func
-            except KeyError:
-                raise RouteExistsError(path)
-        return decorator
 
+    @_make_method
     def patch(self, path:str):
         """
         A decorator that adds a route to the server. Listens to PATCH requests.
@@ -633,13 +444,8 @@ class Server:
         Args:
             path (str): The path to respond to.
         """
-        def decorator(func):
-            try:
-                self.handler.responses["patch"][path] = func
-            except KeyError:
-                raise RouteExistsError(path)
-        return decorator
 
+    @_make_method
     def options(self, path:str):
         """
         A decorator that adds a route to the server. Listens to OPTIONS requests.
@@ -650,13 +456,8 @@ class Server:
         Args:
             path (str): The path to respond to.
         """
-        def decorator(func):
-            try:
-                self.handler.responses["options"][path] = func
-            except KeyError:
-                raise RouteExistsError(path)
-        return decorator
 
+    @_make_method
     def head(self, path:str):
         """
         A decorator that adds a route to the server. Listens to HEAD requests.
@@ -667,13 +468,8 @@ class Server:
         Args:
             path (str): The path to respond to.
         """
-        def decorator(func):
-            try:
-                self.handler.responses["head"][path] = func
-            except KeyError:
-                raise RouteExistsError(path)
-        return decorator
 
+    @_make_method
     def trace(self, path:str):
         """
         A decorator that adds a route to the server. Listens to TRACE requests.
@@ -684,12 +480,6 @@ class Server:
         Args:
             path (str): The path to respond to.
         """
-        def decorator(func):
-            try:
-                self.handler.responses["trace"][path] = func
-            except KeyError:
-                raise RouteExistsError(path)
-        return decorator
 
 
 def init():

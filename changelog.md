@@ -8,6 +8,16 @@ Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-0500/-
 ## Developmental (0.0.X)
 2023/01/16-2023/07/17
 
+### v0.0.21 (2023/07/15 21:05)
+Features:
+* Both `Handler` and `Server` method logic is now condensed to each class's respective `@_make_method` decorator.
+* `@server.all()` can now exclude methods with `exclude:list[str]`!
+Fixes:
+* Bugfix for `Server.listen()` debug printout.
+* Server sent events now work again.
+Misc.:
+* Removed some wild code in `@server.get()` wrapper.
+
 ### v0.0.20 (2023/07/13 21:51)
 * Backticks (`) have been removed from wrapping parameter names in method docstrings, which prevented code editors from properly displaying type hints/parameter descriptions.
 * `communications.Response` is now compatable with Windows file paths now.
