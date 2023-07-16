@@ -45,7 +45,7 @@ def _(req:http_plus.Request, res:http_plus.Response):
 @server.stream("/stream_test")
 def _(req:http_plus.Request, res:http_plus.StreamResponse):
     for i in range(10):
-        yield res.event(str(i), "test")
+        yield res.event(str(i), "message")
         sleep(1)
 
 @server.get("/auth_test")
