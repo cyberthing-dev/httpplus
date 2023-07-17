@@ -289,7 +289,6 @@ class Handler(BaseHTTPRequestHandler):
                         response()
                         return
                 else:
-                    print(f"didnt find {self.path}")
                     self.error(404, message=self.path)
             except Exception as e:
                 if self.debug:
