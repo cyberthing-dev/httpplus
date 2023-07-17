@@ -9,10 +9,7 @@ Run `$ python -m http_plus_purplelemons_dev -h` for more information.
 
 from . import init, Server, Request, Response, NAME
 
-try:
-    assert __name__ == "__main__"
-except AssertionError:
-    raise Exception(f"Do not import this module. Please run this module directly via `python -m {NAME}`.")
+assert __name__ == "__main__", f"Do not import this module. Please run this module directly via `python -m {NAME}`."
 
 import argparse
 from datetime import datetime as dt
