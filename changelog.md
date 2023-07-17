@@ -8,6 +8,10 @@ Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-0500/-
 ## Developmental (0.0.X)
 2023/01/16-2023/07/17
 
+### v0.0.24 (2023/07/17 01:XX)
+Misc.:
+* `Server.stream` is now decorated with `@Server._make_method`
+
 ### v0.0.23 (2023/07/17 00:53)
 Features:
 * Server module script (`python -m http_plus.server`) now has `--log <fmt>` flag for custom logging.

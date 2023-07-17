@@ -24,7 +24,7 @@ Smiliarly, requests to `/subfolder` will look for `./pages/subfolder/.html`.
 You can customize error pages by creating a folder in `./errors` with the name of the error code.
 """
 
-__dev_version__ = "0.0.23"
+__dev_version__ = "0.0.24"
 __version__ = __dev_version__
 NAME = "http_plus_purplelemons_dev"
 
@@ -249,6 +249,19 @@ class Handler(BaseHTTPRequestHandler):
         method_name = http_method.__name__[3:].lower()
         def method(self:"Handler"):
             try:
+                # streams
+                if self.headers.get("Accept") == "text/event-stream":
+                    for func_path in self.responses["stream"]:
+                        matched, kwargs = self.match_route(self.path, func_path)
+                        if matched:
+                            self.send_response(200)
+                            self.send_header("Content-Type", "text/event-stream")
+                            self.send_header("Cache-Control", "no-cache")
+                            self.send_header("Connection", "keep-alive")
+                            self.end_headers()
+                            for event in self.responses["stream"][func_path](Request(self, params=kwargs), StreamResponse(self)):
+                                self.wfile.write(event.to_bytes())
+                            return
                 if method_name == "get":
                     path = self.path
                     if "." in path.split("/")[-1]:
@@ -263,6 +276,7 @@ class Handler(BaseHTTPRequestHandler):
                         if filename is not None:
                             self.respond_file(200, filename)
                             return
+
                 for route_path in self.routes[method_name]:
                     if route_path == self.path:
                         route = self.routes[method_name][route_path]
@@ -274,19 +288,6 @@ class Handler(BaseHTTPRequestHandler):
                         response:Response = self.responses[method_name][func_path](Request(self, params=kwargs), Response(self))
                         response()
                         return
-                # streams
-                if method_name == "get":
-                    for func_path in self.responses["stream"]:
-                        matched, kwargs = self.match_route(self.path, func_path)
-                        if matched:
-                            self.send_response(200)
-                            self.send_header("Content-Type", "text/event-stream")
-                            self.send_header("Cache-Control", "no-cache")
-                            self.send_header("Connection", "keep-alive")
-                            self.end_headers()
-                            for event in self.responses["stream"][func_path](Request(self, params=kwargs), StreamResponse(self)):
-                                self.wfile.write(event.to_bytes())
-                            return
                 else:
                     print(f"didnt find {self.path}")
                     self.error(404, message=self.path)
@@ -419,6 +420,7 @@ class Server:
                     raise RouteExistsError(path)
         return decorator
 
+    @_make_method
     def stream(self, path:str):
         """
         A decorator that adds a route to the server. Listens *ONLY* to GET requests.
@@ -429,12 +431,12 @@ class Server:
         Args:
             path (str): The path to respond to.
         """
-        def decorator(func):
-            try:
-                self.handler.responses["stream"][path] = func
-            except KeyError:
-                raise RouteExistsError(path)
-        return decorator
+        #def decorator(func):
+        #    try:
+        #        self.handler.responses["stream"][path] = func
+        #    except KeyError:
+        #        raise RouteExistsError(path)
+        #return decorator
 
     @_make_method
     def get(self, path:str):
