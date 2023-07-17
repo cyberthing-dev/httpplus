@@ -24,7 +24,7 @@ Smiliarly, requests to `/subfolder` will look for `./pages/subfolder/.html`.
 You can customize error pages by creating a folder in `./errors` with the name of the error code.
 """
 
-__dev_version__ = "0.0.23"
+__dev_version__ = "0.0.24"
 __version__ = __dev_version__
 NAME = "http_plus_purplelemons_dev"
 
@@ -32,13 +32,13 @@ NAME = "http_plus_purplelemons_dev"
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from .content_types import detect_content_type
 from os.path import exists
-from .communications import Route, RouteExistsError, Request, Response, StreamResponse
+from .communications import Route, RouteExistsError, Request, Response, StreamResponse, GQLResponse
 from .static_responses import SEND_RESPONSE_CODE
 from traceback import print_exception as print_exc, format_exc
 from typing import Callable
 from .auth import Auth
 import os.path
-import datetime
+import json
 
 class Handler(BaseHTTPRequestHandler):
     """
@@ -69,7 +69,9 @@ class Handler(BaseHTTPRequestHandler):
         "trace": {},
         # note: stream is not a valid HTTP method, but it is used for streaming responses.
         # see `.communications.StreamResponse`
-        "stream": {}
+        "stream": {},
+        # Again, not an HTTP method. Used for GraphQL.
+        "gql": {}
     }
     page_dir:str
     error_dir:str
@@ -77,6 +79,10 @@ class Handler(BaseHTTPRequestHandler):
     server_version:str = f"http+/{__version__}"
     protocol_version:str = "HTTP/1.1"
     status:int
+    gql_endpoints:dict[str,Callable[...,GQLResponse]] = {}
+    "Endpoint to GQL resolver mappings"
+    gql_schemas:dict[str,str] = {}
+    "Endpoint to GQL schema mappings"
 
     @property
     def ip(self):
@@ -248,7 +254,36 @@ class Handler(BaseHTTPRequestHandler):
         """
         method_name = http_method.__name__[3:].lower()
         def method(self:"Handler"):
+            # Getting body:
+            length = int(self.headers.get("Content-Length", 0))
+            self.body = ""
+            if length:
+                self.body = self.rfile.read(length).decode()
+            # Setting up json
+            self.json = {}
+            if self.headers.get("Content-Type") == "application/json":
+                self.json = json.loads(self.body)
+
             try:
+                # streams
+                if self.headers.get("Accept") == "text/event-stream":
+                    for func_path in self.responses["stream"]:
+                        matched, kwargs = self.match_route(self.path, func_path)
+                        if matched:
+                            self.send_response(200)
+                            self.send_header("Content-Type", "text/event-stream")
+                            self.send_header("Cache-Control", "no-cache")
+                            self.send_header("Connection", "keep-alive")
+                            self.end_headers()
+                            for event in self.responses["stream"][func_path](Request(self, params=kwargs), StreamResponse(self)):
+                                self.wfile.write(event.to_bytes())
+                            return
+                
+                # GQL
+                if self.path in self.gql_endpoints:
+                    self.gql_endpoints[self.path](Request(self, params={}), GQLResponse(self))()
+                    return
+
                 if method_name == "get":
                     path = self.path
                     if "." in path.split("/")[-1]:
@@ -263,6 +298,7 @@ class Handler(BaseHTTPRequestHandler):
                         if filename is not None:
                             self.respond_file(200, filename)
                             return
+
                 for route_path in self.routes[method_name]:
                     if route_path == self.path:
                         route = self.routes[method_name][route_path]
@@ -271,24 +307,9 @@ class Handler(BaseHTTPRequestHandler):
                 for func_path in self.responses[method_name]:
                     matched, kwargs = self.match_route(self.path, func_path)
                     if matched:
-                        response:Response = self.responses[method_name][func_path](Request(self, params=kwargs), Response(self))
-                        response()
+                        self.responses[method_name][func_path](Request(self, params=kwargs), Response(self))()
                         return
-                # streams
-                if method_name == "get":
-                    for func_path in self.responses["stream"]:
-                        matched, kwargs = self.match_route(self.path, func_path)
-                        if matched:
-                            self.send_response(200)
-                            self.send_header("Content-Type", "text/event-stream")
-                            self.send_header("Cache-Control", "no-cache")
-                            self.send_header("Connection", "keep-alive")
-                            self.end_headers()
-                            for event in self.responses["stream"][func_path](Request(self, params=kwargs), StreamResponse(self)):
-                                self.wfile.write(event.to_bytes())
-                            return
                 else:
-                    print(f"didnt find {self.path}")
                     self.error(404, message=self.path)
             except Exception as e:
                 if self.debug:
@@ -407,7 +428,7 @@ class Server:
         Args:
             path (str): The path to respond to.
         """
-        def decorator(func):
+        def decorator(func:Callable):
             funcs = [self.get, self.post, self.put, self.delete, self.patch, self.options, self.head, self.trace]
             if exclude:
                 # by far one of my most clever lines of code
@@ -419,22 +440,35 @@ class Server:
                     raise RouteExistsError(path)
         return decorator
 
+    def gql(self, schema:str, endpoint:str="/api/graphql"):
+        """
+        A decorator that adds a route to the server. Listens *ONLY* to GET requests.
+
+        If you use a keyword wildcard in the route url, arguments will be passed into
+        the function via **kwargs (e.g. `@server.gql("/product/:id")` passes in `{"id": "..."}`).
+
+        Args:
+            endpoint (str): The endpoint that the server will listen on.
+        """
+        def decorator(func:Callable):
+            try:
+                self.handler.gql_endpoints[endpoint] = func
+                self.handler.gql_schemas[endpoint] = schema
+            except KeyError:
+                raise RouteExistsError(endpoint)
+        return decorator
+
+    @_make_method
     def stream(self, path:str):
         """
         A decorator that adds a route to the server. Listens *ONLY* to GET requests.
 
         If you use a keyword wildcard in the route url, arguments will be passed into
-        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
+        the function via **kwargs (e.g. `@server.stream("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             path (str): The path to respond to.
         """
-        def decorator(func):
-            try:
-                self.handler.responses["stream"][path] = func
-            except KeyError:
-                raise RouteExistsError(path)
-        return decorator
 
     @_make_method
     def get(self, path:str):
@@ -454,7 +488,7 @@ class Server:
         A decorator that adds a route to the server. Listens to POST requests.
 
         If you use a keyword wildcard in the route url, arguments will be passed into
-        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
+        the function via **kwargs (e.g. `@server.post("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             path (str): The path to respond to.
@@ -466,7 +500,7 @@ class Server:
         A decorator that adds a route to the server. Listens to PUT requests.
 
         If you use a keyword wildcard in the route url, arguments will be passed into
-        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
+        the function via **kwargs (e.g. `@server.put("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             path (str): The path to respond to.
@@ -478,7 +512,7 @@ class Server:
         A decorator that adds a route to the server. Listens to DELETE requests.
 
         If you use a keyword wildcard in the route url, arguments will be passed into
-        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
+        the function via **kwargs (e.g. `@server.delete("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             path (str): The path to respond to.
@@ -490,7 +524,7 @@ class Server:
         A decorator that adds a route to the server. Listens to PATCH requests.
 
         If you use a keyword wildcard in the route url, arguments will be passed into
-        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
+        the function via **kwargs (e.g. `@server.patch("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             path (str): The path to respond to.
@@ -502,7 +536,7 @@ class Server:
         A decorator that adds a route to the server. Listens to OPTIONS requests.
 
         If you use a keyword wildcard in the route url, arguments will be passed into
-        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
+        the function via **kwargs (e.g. `@server.options("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             path (str): The path to respond to.
@@ -514,7 +548,7 @@ class Server:
         A decorator that adds a route to the server. Listens to HEAD requests.
 
         If you use a keyword wildcard in the route url, arguments will be passed into
-        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
+        the function via **kwargs (e.g. `@server.head("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             path (str): The path to respond to.
@@ -526,7 +560,7 @@ class Server:
         A decorator that adds a route to the server. Listens to TRACE requests.
 
         If you use a keyword wildcard in the route url, arguments will be passed into
-        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
+        the function via **kwargs (e.g. `@server.trace("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             path (str): The path to respond to.

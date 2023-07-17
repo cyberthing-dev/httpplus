@@ -6,8 +6,16 @@ Responsible for defining communication objects and functions.
 from json import dumps, loads
 from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler
-from typing import Any
+from typing import Any, Callable
 from platform import system as detect_os
+import graphql
+
+# super janky dont do this at home. i couldn't use `from . import Handler` because of circular imports, but i want LSP to work.
+class Handler(BaseHTTPRequestHandler):
+    gql_endpoints:dict[str,Callable[...,"GQLResponse"]] = {}
+    gql_schemas:dict[str,str] = {}
+    body:str
+    json:dict
 
 class RouteExistsError(Exception):
     def __init__(self, route:str=...):
@@ -86,7 +94,7 @@ class Request:
                 return self.__repr__() == o.__repr__()
             return False
 
-    def __init__(self, request:BaseHTTPRequestHandler, /, *, params:dict[str,str]):
+    def __init__(self, request:Handler, /, *, params:dict[str,str]):
         self.request = request
         "The request object directly from the HTTP Server."
         self.path = request.path
@@ -95,7 +103,7 @@ class Request:
         "The headers of the request (equivalent to request.headers)."
         self.authorization = self.get_auth()
         "The authorization header of the request, if it exists, in the format `(scheme,token)`. Is `None` if it doesn't exist."
-        self.body = request.rfile.read(int(request.headers.get("Content-Length", 0))).decode()
+        self.body = request.body
         self.ip, self.port = request.client_address
         self.params = self.Params(params)
         "The a dictionary-like object containing the parameters from the request url's keyword path."
@@ -152,7 +160,7 @@ class Response:
     
     You *must* return this from the HTTP method listener function.
     """
-    def __init__(self, response:BaseHTTPRequestHandler):
+    def __init__(self, response:Handler):
         self.response = response
         self.headers:dict[str,str] = {}
         self.body:str = ""
@@ -160,7 +168,7 @@ class Response:
         self.isLinked = False
         self._route: Route
 
-    def set_header(self, header:str, value:Any) -> "Response":
+    def set_header(self, header:str, value:str|Any) -> "Response":
         value = str(value)
         self.headers[header] = value
         return self
@@ -173,10 +181,12 @@ class Response:
         Args:
             body (bytes|str|dict): The body of the response.
         """
+        self.set_header("Content-Type", "text/plain")
         if isinstance(body, dict):
             self.set_header("Content-Type", "application/json")
             self.body = dumps(body)
         elif isinstance(body, bytes):
+            self.set_header("Content-Type", "application/octet-stream")
             self.body = body.decode()
         else:
             self.body = body
@@ -272,3 +282,37 @@ class StreamResponse(Response):
              Listen to the event on the client with `EventSource.addEventListener(event_name, callback, { id: event_id })`.
         """
         return Event(data, event_name, id)
+
+class GQLResponse(Response):
+    """
+    GQLResponse should be used exclusively with `@http_plus.gql(path=str)`.
+
+    You *must* return this from the GraphQL method listener function.
+    """
+    
+    def set_database(self, database:dict[str,]):
+        """
+        Resolves a GQL query with the specified database/dict.
+        """
+        self.database = database
+        return self
+    
+    def _resolve(self) -> dict[str]:
+        schema = self.response.gql_schemas[self.response.path]
+        parsed_schema = graphql.build_schema(schema)
+        query = self.response.json["query"]
+        
+        return graphql.graphql_sync(
+            schema = parsed_schema,
+            source = query,
+            root_value = self.database
+        ).data
+    
+    def __call__(self) -> None:
+        resolved = self._resolve()
+        if resolved is not None:
+            self.set_body(resolved)
+        else:
+            self.status(500)
+            self.set_body({"error": "An error occurred."})
+        return super().__call__()
