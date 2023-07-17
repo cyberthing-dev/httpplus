@@ -407,7 +407,7 @@ class Server:
         Args:
             path (str): The path to respond to.
         """
-        def decorator(func):
+        def decorator(func:Callable):
             funcs = [self.get, self.post, self.put, self.delete, self.patch, self.options, self.head, self.trace]
             if exclude:
                 # by far one of my most clever lines of code
