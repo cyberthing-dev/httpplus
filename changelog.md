@@ -8,7 +8,7 @@ Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-0500/-
 ## Developmental (0.0.X)
 2023/01/16-2023/07/17
 
-### v0.0.23 (2023/07/17 00:00)
+### v0.0.23 (2023/07/17 00:53)
 Features:
 * Server module script (`python -m http_plus.server`) now has `--log <fmt>` flag for custom logging.
 * `@Server.log` can be used to decorate a method that accepts a `Handler` object and returns a string using the module script log format (e.g. `!ip [!date !time]`).
