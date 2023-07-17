@@ -8,9 +8,27 @@ Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-0500/-
 ## Developmental (0.0.X)
 2023/01/16-2023/07/17
 
+### v0.0.23 (2023/07/17 00:00)
+Features:
+* Server module script (`python -m http_plus.server`) now has `--log <fmt>` flag for custom logging.
+* `@Server.log` can be used to decorate a method that accepts a `Handler` object and returns a string using the module script log format (e.g. `!ip [!date !time]`).
+* Server module script now has pages and error dir flags.
+* Server module script can now no longer be imported on accident (via `assert __name__ == "__main__"`).
+* `Handler` has `.ip`, `.port`, `.method`, `proto`, and `status` properties.
+* [Test shell script!](./tests/test.sh)
+
+Fixes:
+* Server module script now actually runs. It was never updated from [dev19](https://github.com/cyberthing-dev/httpplus/pull/48/commits/f1e0e68b98e0d6a492bf8c10fccb72410c0db319).
+* `Handler.serve_filename()` now serves from `Handler.page_dir` and not `./pages/` explicitly.
+* Server module script now no longer depends on a specific module name, rather now imports necessary methods from the module folder directly.
+
+Misc.:
+* Changelog now formatted correctly.
+
 ### v0.0.22 (2023/07/15 22:56)
 Features:
 * Javascript and CSS are now served in http+ style (e.g. `./pages/path/.css`).
+
 Fixes:
 * Removed a wild debug statement.
 
@@ -18,9 +36,11 @@ Fixes:
 Features:
 * Both `Handler` and `Server` method logic is now condensed to each class's respective `@_make_method` decorator.
 * `@server.all()` can now exclude methods with `exclude:list[str]`!
+
 Fixes:
 * Bugfix for `Server.listen()` debug printout.
 * Server sent events now work again.
+
 Misc.:
 * Removed some wild code in `@server.get()` wrapper.
 

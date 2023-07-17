@@ -1,10 +1,15 @@
 
 import http_plus_purplelemons_dev as http_plus
 from time import sleep
+from datetime import datetime as dt
 
 server = http_plus.Server(debug=True)
 
 auth = http_plus.Auth()
+
+@server.log
+def logger(r:http_plus.Handler):
+    print(f"[{dt.now().strftime('%H:%M:%S')}] ({r.ip}) \"{r.method} {r.path}\" {r.protocol_version}")
 
 @server.get("/")
 def _(req:http_plus.Request, res:http_plus.Response):
