@@ -32,13 +32,13 @@ NAME = "http_plus_purplelemons_dev"
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from .content_types import detect_content_type
 from os.path import exists
-from .communications import Route, RouteExistsError, Request, Response, StreamResponse
+from .communications import Route, RouteExistsError, Request, Response, StreamResponse, GQLResponse
 from .static_responses import SEND_RESPONSE_CODE
 from traceback import print_exception as print_exc, format_exc
 from typing import Callable
 from .auth import Auth
 import os.path
-import datetime
+import json
 
 class Handler(BaseHTTPRequestHandler):
     """
@@ -69,7 +69,9 @@ class Handler(BaseHTTPRequestHandler):
         "trace": {},
         # note: stream is not a valid HTTP method, but it is used for streaming responses.
         # see `.communications.StreamResponse`
-        "stream": {}
+        "stream": {},
+        # Again, not an HTTP method. Used for GraphQL.
+        "gql": {}
     }
     page_dir:str
     error_dir:str
@@ -77,6 +79,10 @@ class Handler(BaseHTTPRequestHandler):
     server_version:str = f"http+/{__version__}"
     protocol_version:str = "HTTP/1.1"
     status:int
+    gql_endpoints:dict[str,Callable[...,GQLResponse]] = {}
+    "Endpoint to GQL resolver mappings"
+    gql_schemas:dict[str,str] = {}
+    "Endpoint to GQL schema mappings"
 
     @property
     def ip(self):
@@ -248,6 +254,16 @@ class Handler(BaseHTTPRequestHandler):
         """
         method_name = http_method.__name__[3:].lower()
         def method(self:"Handler"):
+            # Getting body:
+            length = int(self.headers.get("Content-Length", 0))
+            self.body = ""
+            if length:
+                self.body = self.rfile.read(length).decode()
+            # Setting up json
+            self.json = {}
+            if self.headers.get("Content-Type") == "application/json":
+                self.json = json.loads(self.body)
+
             try:
                 # streams
                 if self.headers.get("Accept") == "text/event-stream":
@@ -262,6 +278,12 @@ class Handler(BaseHTTPRequestHandler):
                             for event in self.responses["stream"][func_path](Request(self, params=kwargs), StreamResponse(self)):
                                 self.wfile.write(event.to_bytes())
                             return
+                
+                # GQL
+                if self.path in self.gql_endpoints:
+                    self.gql_endpoints[self.path](Request(self, params={}), GQLResponse(self))()
+                    return
+
                 if method_name == "get":
                     path = self.path
                     if "." in path.split("/")[-1]:
@@ -285,8 +307,7 @@ class Handler(BaseHTTPRequestHandler):
                 for func_path in self.responses[method_name]:
                     matched, kwargs = self.match_route(self.path, func_path)
                     if matched:
-                        response:Response = self.responses[method_name][func_path](Request(self, params=kwargs), Response(self))
-                        response()
+                        self.responses[method_name][func_path](Request(self, params=kwargs), Response(self))()
                         return
                 else:
                     self.error(404, message=self.path)
@@ -417,6 +438,24 @@ class Server:
                     method(path)(func)
                 except KeyError:
                     raise RouteExistsError(path)
+        return decorator
+
+    def gql(self, schema:str, endpoint:str="/api/graphql"):
+        """
+        A decorator that adds a route to the server. Listens *ONLY* to GET requests.
+
+        If you use a keyword wildcard in the route url, arguments will be passed into
+        the function via **kwargs (e.g. `@server.gql("/product/:id")` passes in `{"id": "..."}`).
+
+        Args:
+            endpoint (str): The endpoint that the server will listen on.
+        """
+        def decorator(func:Callable):
+            try:
+                self.handler.gql_endpoints[endpoint] = func
+                self.handler.gql_schemas[endpoint] = schema
+            except KeyError:
+                raise RouteExistsError(endpoint)
         return decorator
 
     @_make_method

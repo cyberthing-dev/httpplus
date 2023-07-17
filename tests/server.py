@@ -11,8 +11,9 @@ auth = http_plus.Auth()
 def logger(r:http_plus.Handler):
     print(f"[{dt.now().strftime('%H:%M:%S')}] ({r.ip}) \"{r.method} {r.path}\" {r.protocol_version}")
 
-@server.get("/")
+@server.get("/init")
 def _(req:http_plus.Request, res:http_plus.Response):
+    print(f"{req.body=}")
     return res.set_body("Hello, world!")
 
 @server.get("/test")
@@ -83,5 +84,38 @@ def _(req:http_plus.Request, res:http_plus.Response):
 def _(req:http_plus.Request, res:http_plus.Response):
     0/0
     return res.set_body("Hello, error_test!")
+
+products = {
+    "shirts": [
+        {
+            "name": "Shirt 1",
+            "price": 10
+        },
+        {
+            "name": "Shirt 2",
+            "price": 20
+        }
+    ],
+    "pants": [
+        {
+            "name": "Pants 1",
+            "price": 30
+        }
+    ]
+}
+
+@server.gql(
+    schema="""
+type Query {
+    shirts: [Product]
+    pants: [Product]
+}
+type Product {
+    name: String
+    price: Int
+}
+""")
+def _(req:http_plus.Request, res:http_plus.GQLResponse):
+    return res.set_database(products)
 
 server.listen(8000)
