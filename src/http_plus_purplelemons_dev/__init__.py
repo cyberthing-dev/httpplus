@@ -426,7 +426,7 @@ class Server:
         A decorator that adds a route to the server. Listens *ONLY* to GET requests.
 
         If you use a keyword wildcard in the route url, arguments will be passed into
-        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
+        the function via **kwargs (e.g. `@server.stream("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             path (str): The path to respond to.
@@ -450,7 +450,7 @@ class Server:
         A decorator that adds a route to the server. Listens to POST requests.
 
         If you use a keyword wildcard in the route url, arguments will be passed into
-        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
+        the function via **kwargs (e.g. `@server.post("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             path (str): The path to respond to.
@@ -462,7 +462,7 @@ class Server:
         A decorator that adds a route to the server. Listens to PUT requests.
 
         If you use a keyword wildcard in the route url, arguments will be passed into
-        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
+        the function via **kwargs (e.g. `@server.put("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             path (str): The path to respond to.
@@ -474,7 +474,7 @@ class Server:
         A decorator that adds a route to the server. Listens to DELETE requests.
 
         If you use a keyword wildcard in the route url, arguments will be passed into
-        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
+        the function via **kwargs (e.g. `@server.delete("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             path (str): The path to respond to.
@@ -486,7 +486,7 @@ class Server:
         A decorator that adds a route to the server. Listens to PATCH requests.
 
         If you use a keyword wildcard in the route url, arguments will be passed into
-        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
+        the function via **kwargs (e.g. `@server.patch("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             path (str): The path to respond to.
@@ -498,7 +498,7 @@ class Server:
         A decorator that adds a route to the server. Listens to OPTIONS requests.
 
         If you use a keyword wildcard in the route url, arguments will be passed into
-        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
+        the function via **kwargs (e.g. `@server.options("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             path (str): The path to respond to.
@@ -510,7 +510,7 @@ class Server:
         A decorator that adds a route to the server. Listens to HEAD requests.
 
         If you use a keyword wildcard in the route url, arguments will be passed into
-        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
+        the function via **kwargs (e.g. `@server.head("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             path (str): The path to respond to.
@@ -522,7 +522,7 @@ class Server:
         A decorator that adds a route to the server. Listens to TRACE requests.
 
         If you use a keyword wildcard in the route url, arguments will be passed into
-        the function via **kwargs (e.g. `@server.get("/product/:id")` passes in `{"id": "..."}`).
+        the function via **kwargs (e.g. `@server.trace("/product/:id")` passes in `{"id": "..."}`).
 
         Args:
             path (str): The path to respond to.
