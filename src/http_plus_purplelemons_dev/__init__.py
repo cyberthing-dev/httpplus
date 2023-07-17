@@ -431,12 +431,6 @@ class Server:
         Args:
             path (str): The path to respond to.
         """
-        #def decorator(func):
-        #    try:
-        #        self.handler.responses["stream"][path] = func
-        #    except KeyError:
-        #        raise RouteExistsError(path)
-        #return decorator
 
     @_make_method
     def get(self, path:str):
