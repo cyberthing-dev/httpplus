@@ -24,8 +24,9 @@ Smiliarly, requests to `/subfolder` will look for `./pages/subfolder/.html`.
 You can customize error pages by creating a folder in `./errors` with the name of the error code.
 """
 
-__dev_version__ = "0.0.22"
+__dev_version__ = "0.0.23"
 __version__ = __dev_version__
+NAME = "http_plus_purplelemons_dev"
 
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -37,6 +38,7 @@ from traceback import print_exception as print_exc, format_exc
 from typing import Callable
 from .auth import Auth
 import os.path
+import datetime
 
 class Handler(BaseHTTPRequestHandler):
     """
@@ -74,6 +76,38 @@ class Handler(BaseHTTPRequestHandler):
     debug:bool
     server_version:str = f"http+/{__version__}"
     protocol_version:str = "HTTP/1.1"
+    status:int
+
+    @property
+    def ip(self):
+        return self.client_address[0]
+    
+    @property
+    def port(self):
+        return self.client_address[1]
+    
+    @property
+    def method(self):
+        return self.command
+    
+    @property
+    def proto(self):
+        return self.protocol_version
+
+    def custom_logger(self):
+        "Override this"
+        pass
+
+    def log_message(self, fmt:str, *args) -> None:
+        """
+        Do not override. Use `@server.log`.
+        """
+        self.status = int(args[1])
+        # bit of a hacky way of checking if the user has overriden the custom logger
+        if self.custom_logger.__doc__ == "Override this":
+            return super().log_message(fmt, *args)
+        else:
+            return self.custom_logger()
 
     def error(self, code:int, *, message:str=None, headers:dict[str,str]=None, traceback:str="", **kwargs) -> None:
         error_page_path = f"{self.error_dir}/{code}/.html"
@@ -185,8 +219,7 @@ class Handler(BaseHTTPRequestHandler):
                 return True, kwargs
         return False, {}
 
-    @staticmethod
-    def serve_filename(path:str, target_ext:str="html") -> "str|None":
+    def serve_filename(self, path:str, target_ext:str="html") -> "str|None":
         """
         Returns the filename of a path. If the path is not a file, returns `None`.
 
@@ -197,13 +230,13 @@ class Handler(BaseHTTPRequestHandler):
             str|None: The path to the desired file, or `None` if the file does not exist.
         """
         # Search for files in the form `pages/path/.ext`
-        target = f"pages{path}/.{target_ext}"
+        target = f"{self.page_dir}{path}/.{target_ext}"
         if not os.path.exists(target):
             # Search for files in the form `pages/path.ext`
-            target = f"pages{path}.{target_ext}"
+            target = f"{self.page_dir}{path}.{target_ext}"
             if not os.path.exists(target):
                 # if all else fails, index is poggers
-                target = f"pages/index.{target_ext}"
+                target = f"{self.page_dir}/index.{target_ext}"
                 if not os.path.exists(target):
                     target = None
         return target
@@ -356,6 +389,13 @@ class Server:
                     raise RouteExistsError(path)
             return decorator
         return method
+    
+    def log(self, func:Callable):
+        """
+        A decorator that adds a custom logger to the server.
+        Your logger function should take in a `Handler` object as its only argument.
+        """
+        self.handler.custom_logger = func
 
     def all(self, path:str, exclude:list[str]=[]):
         """
