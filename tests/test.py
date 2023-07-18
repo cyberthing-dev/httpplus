@@ -1,3 +1,4 @@
 
-def __call__():
-    print("well hello there")
+import os
+
+print(os.listdir('.'))
