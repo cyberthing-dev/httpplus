@@ -8,9 +8,10 @@ Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-0500/-
 ## Developmental (0.0.X)
 2023/01/16-2023/07/17
 
-### v0.0.25 (2023/07/17 20:00)
+### v0.0.25 (2023/07/17 20:27)
 Features:
 * Integration with [brython](https://brython.info).
+* Python script files are sent alongside HTML files as brython scripts.
 
 ### v0.0.24 (2023/07/17 17:41)
 Features:
