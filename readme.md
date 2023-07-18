@@ -4,7 +4,7 @@ hi welcome to http plus. It's a high-level, dynamic HTTP server for Python. Quic
 high-performance ones.
 
 ## Version
-Development version 0.1.0
+Development version 0.1.1
 
 (go check the [changelog](./changelog.md) for more info on versions plz i worked hard on it thx)
 
