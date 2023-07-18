@@ -5,6 +5,12 @@ Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-0500/-
 * [Pre-release](#) -- This stage will end when I finish gathering feedback from the community and adding new features. Changes can be tracked [here](https://github.com/orgs/cyberthing-dev/projects/3/views/1).
 * [Release](#) -- This stage will be continuous and offer bug fixes, maybe new features.
 
+## Pre-release (0.X.X)
+2023/07/17-...
+
+### 0.1.0 (2023/07/17 20:31)
+Init new release.
+
 ## Developmental (0.0.X)
 2023/01/16-2023/07/17
 
