@@ -24,8 +24,7 @@ Smiliarly, requests to `/subfolder` will look for `./pages/subfolder/.html`.
 You can customize error pages by creating a folder in `./errors` with the name of the error code.
 """
 
-__dev_version__ = "0.0.25"
-__version__ = __dev_version__
+__version__ = "0.1.0"
 NAME = "http_plus_purplelemons_dev"
 
 
