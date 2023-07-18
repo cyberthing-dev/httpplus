@@ -24,7 +24,7 @@ Smiliarly, requests to `/subfolder` will look for `./pages/subfolder/.html`.
 You can customize error pages by creating a folder in `./errors` with the name of the error code.
 """
 
-__dev_version__ = "0.0.24"
+__dev_version__ = "0.0.25"
 __version__ = __dev_version__
 NAME = "http_plus_purplelemons_dev"
 
@@ -79,6 +79,7 @@ class Handler(BaseHTTPRequestHandler):
     server_version:str = f"http+/{__version__}"
     protocol_version:str = "HTTP/1.1"
     status:int
+    brython:bool
     gql_endpoints:dict[str,Callable[...,GQLResponse]] = {}
     "Endpoint to GQL resolver mappings"
     gql_schemas:dict[str,str] = {}
@@ -284,6 +285,7 @@ class Handler(BaseHTTPRequestHandler):
                     self.gql_endpoints[self.path](Request(self, params={}), GQLResponse(self))()
                     return
 
+                # file serve
                 if method_name == "get":
                     path = self.path
                     if "." in path.split("/")[-1]:
@@ -293,7 +295,39 @@ class Handler(BaseHTTPRequestHandler):
                     else:
                         # otherwise, assume html
                         extension = "html"
-                    if extension in ["html", "css", "js"]:
+
+                    if extension == "html":
+                        # check if python script in directory
+                        py_files = []
+                        for file in os.listdir(f"{self.page_dir}{path}"):
+                            if file.endswith(".py"):
+                                py_files.append(file)
+                        if py_files:
+                            html_filename = f"{self.page_dir}{path}/.{extension}"
+                            with open(html_filename, 'r') as f:
+                                html = f.read()
+
+                                body_location = html.index("<body")
+                                # insert `onload="brython()"` into body tag
+                                html = html[:body_location+5] + " onload=\"brython()\"" + html[body_location+5:]
+
+                                end_of_body = html.index("</body>")
+                                script_injection = "<script src=\"https://cdn.jsdelivr.net/npm/brython@3/brython.min.js\">\n</script><script src=\"https://cdn.jsdelivr.net/npm/brython@3/brython_stdlib.js\"></script>\n"
+                                for py_file in py_files:
+                                    with open(f"{self.page_dir}{path}/{py_file}", 'r') as f:
+                                        py_script = f.read()
+                                    script_injection += f"<script type=\"text/python\">{py_script}</script>\n"
+
+                                new_html = html[:end_of_body] + script_injection + html[end_of_body:]
+
+                                self.send_response(200)
+                                self.send_header("Content-Type", "text/html")
+                                self.send_header("Content-Length", len(new_html))
+                                self.end_headers()
+                                self.wfile.write(new_html.encode())
+                            return
+
+                    elif extension in ["css", "js", "py"]:
                         filename = self.serve_filename(path, extension)
                         if filename is not None:
                             self.respond_file(200, filename)
@@ -348,7 +382,7 @@ class Server:
         for example `@server.get("/")`.
     """
 
-    def __init__(self, /, *, page_dir:str="./pages", error_dir="./errors", debug:bool=False, **kwargs):
+    def __init__(self, /, *, brython:bool=True, page_dir:str="./pages", error_dir="./errors", debug:bool=False, **kwargs):
         """
         Listen to HTTP methods with `@server.<method>(path)`, for example...
         ```
@@ -366,8 +400,9 @@ class Server:
         self.debug = debug
         self.handler = Handler
         self.handler.debug = debug
-        self.handler.page_dir = page_dir
-        self.handler.error_dir = error_dir
+        self.handler.brython = brython
+        self.handler.page_dir = page_dir[:-1] if page_dir.endswith("/") else page_dir
+        self.handler.error_dir = error_dir[:-1] if error_dir.endswith("/") else error_dir
 
     def listen(self, port:int, ip:str=None) -> None:
         """

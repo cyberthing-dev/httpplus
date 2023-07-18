@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "http_plus_purplelemons_dev"
-version = "0.0.24"
+version = "0.0.25"
 authors = [
     {name = "PurpleLemons", email = "josh@thebasement.group"}
 ]
