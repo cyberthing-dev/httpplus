@@ -11,6 +11,7 @@ Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-0500/-
 ### v0.0.25 (2023/07/17 )
 Features:
 * Integration with [brython](https://brython.info).
+* Files in the form of `*.py` in the `Handler.page_dir` are sent with the HTML as brython scripts.
 
 ### v0.0.24 (2023/07/17 17:41)
 Features:
