@@ -8,6 +8,10 @@ Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-0500/-
 ## Pre-release (0.X.X)
 2023/07/17-...
 
+### 0.1.1 (2023/07/17 20:49)
+Misc.:
+* `Handler` now lives in `handler.py` in order to cut down the size and clarity of `__init__.py`. Plans to move `Server` to its own file in the future?
+
 ### 0.1.0 (2023/07/17 20:31)
 Init new release.
 
