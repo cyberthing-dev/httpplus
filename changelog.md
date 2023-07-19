@@ -8,6 +8,11 @@ Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-0500/-
 ## Pre-release (0.X.X)
 2023/07/17-...
 
+### v0.1.3 (2023/07/19 12:10)
+Fixes:
+* Brython bug where the server will modify html files regardless of whether `Handler.bython==True`.
+* Brython description in `Server()` constructor.
+
 ### v0.1.2 (2023/07/19 01:17)
 Features:
 * `Handler` is now in `communications.py`, which is where it should have been all along because of how often it refrences and calls the classes defined in that file.

@@ -275,7 +275,7 @@ class Handler(BaseHTTPRequestHandler):
                         # otherwise, assume html
                         extension = "html"
 
-                    if extension == "html":
+                    if extension == "html" and self.brython:
                         # check if python script in directory
                         py_files = []
                         for file in os.listdir(f"{self.page_dir}{path}"):

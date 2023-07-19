@@ -24,13 +24,13 @@ Smiliarly, requests to `/subfolder` will look for `./pages/subfolder/.html`.
 You can customize error pages by creating a folder in `./errors` with the name of the error code.
 """
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 NAME = "http_plus_purplelemons_dev"
 
 from http.server import HTTPServer
 from typing import Callable
 from .auth import Auth
-from .communications import Handler, RouteExistsError, Request, Response, GQLResponse, StreamResponse
+from .communications import *
 
 class Server:
     """
@@ -51,6 +51,7 @@ class Server:
         More about the `req` and `res` objects can be found in `http_plus.communications`.
         
         Args:
+            brython (bool): Whether or not the server should ship brython files.
             page_dir (str): The directory to serve pages from.
             error_dir (str): The directory to serve error pages from.
             debug (bool): Whether or not to print debug messages.
