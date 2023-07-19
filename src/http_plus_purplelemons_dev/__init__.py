@@ -24,14 +24,13 @@ Smiliarly, requests to `/subfolder` will look for `./pages/subfolder/.html`.
 You can customize error pages by creating a folder in `./errors` with the name of the error code.
 """
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 NAME = "http_plus_purplelemons_dev"
 
 from http.server import HTTPServer
 from typing import Callable
 from .auth import Auth
-from .handler import Handler
-from .communications import RouteExistsError, Request, Response, GQLResponse, StreamResponse
+from .communications import Handler, RouteExistsError, Request, Response, GQLResponse, StreamResponse
 
 class Server:
     """

@@ -8,11 +8,19 @@ Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-0500/-
 ## Pre-release (0.X.X)
 2023/07/17-...
 
-### 0.1.1 (2023/07/17 20:49)
+### v0.1.2 (2023/07/19 01:17)
+Features:
+* `Handler` is now in `communications.py`, which is where it should have been all along because of how often it refrences and calls the classes defined in that file.
+
+Misc.:
+* Appended the suffix `v` in front of the recent pre release versions in changelog because I forgot to do that.
+* [Readme](./readme.md) now no longer says "Development version <...>", changed to "Pre-release version <...>"
+
+### v0.1.1 (2023/07/17 20:49)
 Misc.:
 * `Handler` now lives in `handler.py` in order to cut down the size and clarity of `__init__.py`. Plans to move `Server` to its own file in the future?
 
-### 0.1.0 (2023/07/17 20:31)
+### v0.1.0 (2023/07/17 20:31)
 Init new release.
 
 ## Developmental (0.0.X)
