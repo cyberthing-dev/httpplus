@@ -4,9 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "http_plus_purplelemons_dev"
-version = "0.1.1"
+version = "0.1.2"
 authors = [
-    {name = "PurpleLemons", email = "josh@thebasement.group"}
+    {name = "PurpleLemons", email = "jsmith@cyberthing.dev"}
 ]
 description = "A high-level, dynamic HTTP server for Python. Quickly deploy simple servers, or customize complex, high-performance ones."
 readme = "readme.md"

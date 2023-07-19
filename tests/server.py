@@ -9,7 +9,7 @@ auth = http_plus.Auth()
 
 @server.log
 def logger(r:http_plus.Handler):
-    print(f"[{dt.now().strftime('%H:%M:%S')}] ({r.ip}) \"{r.method} {r.path}\" {r.protocol_version}")
+    print(f"[{dt.now().strftime('%H:%M:%S')}] ({r.ip}) \"{r.method} {r.status} {r.path}\" {r.protocol_version}")
 
 @server.get("/init")
 def _(req:http_plus.Request, res:http_plus.Response):
