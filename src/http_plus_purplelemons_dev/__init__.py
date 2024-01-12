@@ -24,13 +24,14 @@ Smiliarly, requests to `/subfolder` will look for `./pages/subfolder/.html`.
 You can customize error pages by creating a folder in `./errors` with the name of the error code.
 """
 
-__version__ = "0.1.3"
+__version__ = "0.2.0"
 NAME = "http_plus_purplelemons_dev"
 
-from http.server import HTTPServer
+from http.server import HTTPServer, ThreadingHTTPServer
 from typing import Callable
 from .auth import Auth
 from .communications import *
+from .asyncServer import AsyncHandler
 
 class Server:
     """
@@ -58,6 +59,7 @@ class Server:
         """
         self.debug = debug
         self.handler = Handler
+        self.handler.responses
         self.handler.debug = debug
         self.handler.brython = brython
         self.handler.page_dir = page_dir[:-1] if page_dir.endswith("/") else page_dir
@@ -260,6 +262,54 @@ class Server:
             path (str): The path to respond to.
         """
 
+
+class AsyncServer(Server):
+    def __init__(self, /, *, brython: bool = True, page_dir: str = "./pages", error_dir="./errors", debug: bool = False, **kwargs):
+        super().__init__(brython=brython, page_dir=page_dir, error_dir=error_dir, debug=debug, **kwargs)
+        self.handler = AsyncHandler
+        self.handler.debug = debug
+        self.handler.brython = brython
+        self.handler.page_dir = page_dir[:-1] if page_dir.endswith("/") else page_dir
+        self.handler.error_dir = error_dir[:-1] if error_dir.endswith("/") else error_dir
+        self.handler.protocol = "HTTP/1.1"
+        self.handler.server_version = f"http+/{__version__}"
+
+    def listen(self, port:int, ip:str=None) -> None:
+        """
+        Starts the server, a blocking loop on the current thread.
+        The IP will default to all interfaces (`0.0.0.0`) if not specified, unless if the
+        server was initialized with `debug=True`, in which case it will default to loopback
+        (`127.0.0.1`).
+        
+        Args:
+            port (int): The port to listen on. Must be available, otherwise the server will raise a binding error.
+            ip (str): String in the form of an IP address to listen on. Must be an address on the current machine.
+        """
+        if self.debug:
+            if ip is None:
+                # Debug and no IP specified, use loopback
+                ip = "127.0.0.1"
+            print(f"Listening on http://{ip}{':'+str(port) if port != 80 else ''}/")
+        elif ip is None:
+            # No debug and no IP specified, use all interfaces
+            ip = "0.0.0.0"
+        try:
+            import asyncio
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            self.handler.create_task = loop.create_task
+            coro = loop.create_server(self.handler, ip, port)
+            server = loop.run_until_complete(coro)
+            try:
+                loop.run_forever()
+            except KeyboardInterrupt:
+                pass
+            server.close()
+            loop.run_until_complete(server.wait_closed())
+            loop.close()
+        except Exception as e:
+            print(f"Server error: {e}")
+            raise e
 
 def init():
     """
