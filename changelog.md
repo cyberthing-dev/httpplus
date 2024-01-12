@@ -8,6 +8,10 @@ Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-0500/-
 ## Pre-release (0.X.X)
 2023/07/17-...
 
+### v0.2.0 (2023/07/22 00:10)
+Features:
+* Async with `AsyncServer()` from `http_plus.asyncServer`.
+
 ### v0.1.3 (2023/07/19 12:10)
 Fixes:
 * Brython bug where the server will modify html files regardless of whether `Handler.bython==True`.

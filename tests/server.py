@@ -89,17 +89,20 @@ products = {
     "shirts": [
         {
             "name": "Shirt 1",
-            "price": 10
+            "price": 10,
+            "product_id": "shirt1"
         },
         {
             "name": "Shirt 2",
-            "price": 20
+            "price": 20,
+            "product_id": "shirt2"
         }
     ],
     "pants": [
         {
             "name": "Pants 1",
-            "price": 30
+            "price": 30,
+            "product_id": "pants1"
         }
     ]
 }
