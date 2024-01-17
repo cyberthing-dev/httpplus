@@ -355,7 +355,13 @@ class Handler(BaseHTTPRequestHandler):
                         # otherwise, assume html
                         extension = "html"
 
-                    if extension == "html" and self.brython:
+                    if extension == "html" and not os.path.exists(f"{self.page_dir}{path}.py"):
+                        filename = self.serve_filename(path, extension)
+                        if filename is not None:
+                            self.respond_file(200, filename)
+                            return
+
+                    elif extension == "html" and self.brython:
                         # check if python script in directory
                         py_files = []
                         for file in os.listdir(f"{self.page_dir}{path}"):
@@ -606,7 +612,8 @@ class Request:
         try:
             return self.headers["Authorization"].split(" ", 1)
         except (
-            KeyError
+            KeyError,
+            AttributeError,
         ):  # note on commit 77290f6: i have no idea why the fuck it was AttributeError and furthermore have less of a clue as to why it was working fine
             return default
 
