@@ -330,14 +330,16 @@ class Handler(BaseHTTPRequestHandler):
                             self.send_header("Cache-Control", "no-cache")
                             self.send_header("Connection", "keep-alive")
                             self.end_headers()
+                            self.flush_headers()
+
                             for event in self.responses["stream"][func_path](
                                 Request(self, params=kwargs), StreamResponse(self)
                             ):
                                 event: Event
-                                if event.closed:
-                                    self.wfile.write("event: end\r\n\r\n".encode())
-                                    return
                                 self.wfile.write(event.to_bytes())
+                                self.wfile.flush()
+                                if event.event_name == "close":
+                                    return
                             return
 
                 # GQL
@@ -358,7 +360,9 @@ class Handler(BaseHTTPRequestHandler):
                         # otherwise, assume html
                         extension = "html"
 
-                    if extension == "html" and not os.path.exists(f"{self.page_dir}{path}.py"):
+                    if extension == "html" and not os.path.exists(
+                        f"{self.page_dir}{path}.py"
+                    ):
                         filename = self.serve_filename(path, extension)
                         if filename is not None:
                             self.respond_file(200, filename)
@@ -494,7 +498,6 @@ class Event:
         self.data = data
         self.event_name = event_name
         self.id = id
-        self._closed = False
 
     def to_bytes(self) -> bytes:
         message = ""
@@ -505,13 +508,10 @@ class Event:
         message += f"data: {self.data}\r\n"
         message += "\r\n"
         return message.encode()
-    
-    @property
-    def closed(self) -> bool:
-        return self._closed
-    
+
     def close(self):
-        self._closed = True
+        "Will overwrite `.event_name`"
+        self.event_name = "close"
         return self
 
 
