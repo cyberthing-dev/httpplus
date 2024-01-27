@@ -24,7 +24,7 @@ Smiliarly, requests to `/subfolder` will look for `./pages/subfolder/.html`.
 You can customize error pages by creating a folder in `./errors` with the name of the error code.
 """
 
-__version__ = "0.2.2"
+__version__ = "0.2.3"
 NAME = "http_plus_purplelemons_dev"
 
 from http.server import HTTPServer, ThreadingHTTPServer
@@ -85,7 +85,7 @@ class Server:
             # No debug and no IP specified, use all interfaces
             ip = "0.0.0.0"
         try:
-            HTTPServer((ip,port), self.handler).serve_forever()
+            ThreadingHTTPServer((ip,port), self.handler).serve_forever()
         except KeyboardInterrupt:
             print("\nServer stopped.")
         except Exception as e:

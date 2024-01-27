@@ -8,6 +8,10 @@ Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-0500/-
 ## Pre-release (0.X.X)
 2023/07/17-...
 
+### v0.2.3 (2024/01/27 15:10)
+Features:
+* Using `ThreadingHTTPServer` now.
+
 ### v0.2.2 (2024/01/27 09:50)
 Fixes:
 * Streaming event closure bug #52
