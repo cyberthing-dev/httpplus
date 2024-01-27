@@ -334,6 +334,9 @@ class Handler(BaseHTTPRequestHandler):
                                 Request(self, params=kwargs), StreamResponse(self)
                             ):
                                 event: Event
+                                if event.closed:
+                                    self.wfile.write("event: end\r\n\r\n".encode())
+                                    return
                                 self.wfile.write(event.to_bytes())
                             return
 
@@ -483,11 +486,15 @@ class RouteExistsError(Exception):
 class Event:
     def __init__(self, data: str, event_name: str = None, id: str = None):
         """
-        Used for streaming events to the client. Set up a listener with `http_plus.stream(path=str)`
+        Yeild an instance to stream events to the client.
+        Set up a listener with `http_plus.stream(path=str)`
+
+        Yield or return `Event.close()` to close the stream.
         """
         self.data = data
         self.event_name = event_name
         self.id = id
+        self._closed = False
 
     def to_bytes(self) -> bytes:
         message = ""
@@ -498,6 +505,14 @@ class Event:
         message += f"data: {self.data}\r\n"
         message += "\r\n"
         return message.encode()
+    
+    @property
+    def closed(self) -> bool:
+        return self._closed
+    
+    def close(self):
+        self._closed = True
+        return self
 
 
 @dataclass
