@@ -8,6 +8,11 @@ Dates are in YYYY/MM/DD format, time is in America/Chicago (CDT/CST), UTC-0500/-
 ## Pre-release (0.X.X)
 2023/07/17-...
 
+### v0.2.4 (2024/01/28 15:44)
+Fixes:
+* Body is no longer force-decoded with `utf-8` in `Handler.body` property. Fails silently based on
+`Content-type` header and defaults to `Handler.body: bytes`.
+
 ### v0.2.3 (2024/01/27 15:10)
 Features:
 * Using `ThreadingHTTPServer` now.
