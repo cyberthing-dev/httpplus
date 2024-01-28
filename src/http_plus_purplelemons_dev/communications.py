@@ -753,7 +753,6 @@ class Response:
         Sends the response to the client.
         You should not call this manually unless you are modifying `http_plus.Server`.
         """
-        print("Response was called")
         self.response.send_response(self.status_code)
         for header, value in self.headers.items():
             self.response.send_header(header, value)
