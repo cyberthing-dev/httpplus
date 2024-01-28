@@ -24,7 +24,7 @@ Smiliarly, requests to `/subfolder` will look for `./pages/subfolder/.html`.
 You can customize error pages by creating a folder in `./errors` with the name of the error code.
 """
 
-__version__ = "0.2.3"
+__version__ = "0.2.4"
 NAME = "http_plus_purplelemons_dev"
 
 from http.server import HTTPServer, ThreadingHTTPServer

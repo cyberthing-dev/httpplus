@@ -315,10 +315,13 @@ class Handler(BaseHTTPRequestHandler):
             # Getting body:
             length = int(self.headers.get("Content-Length", 0))
             if length:
-                self.body = self.rfile.read(length).decode()
-            # Setting up json
-            if self.headers.get("Content-Type") == "application/json":
-                self.json = json.loads(self.body)
+                if self.headers.get("Content-Type") == "application/json":
+                    self.body = self.rfile.read(length).decode()
+                else:
+                    self.body = self.rfile.read(length)
+                # Setting up json
+                if self.headers.get("Content-Type") == "application/json":
+                    self.json = json.loads(self.body)
             try:
                 # streams
                 if self.headers.get("Accept") == "text/event-stream":
