@@ -340,7 +340,6 @@ class Handler(BaseHTTPRequestHandler):
                             ):
                                 event: Event
                                 self.wfile.write(event.to_bytes())
-                                self.wfile.flush()
                                 if event.event_name == "close":
                                     return
                             return
