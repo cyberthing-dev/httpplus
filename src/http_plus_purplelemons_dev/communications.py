@@ -105,7 +105,7 @@ class Handler(BaseHTTPRequestHandler):
         "trace": {},
     }
     # I spent 30m trying to debug this because this was originally set to `routes.copy()`. im never using `.copy()` again.
-    responses: dict[str, dict[str, Callable]] = {
+    responses: dict[str, dict[str, Callable]] = {  # type: ignore
         "get": {},
         "post": {},
         "put": {},
@@ -126,7 +126,7 @@ class Handler(BaseHTTPRequestHandler):
     server_version: str = f"http+/{__version__}"
     protocol_version: str = "HTTP/1.1"
     status: int
-    body: str = ""
+    body: bytes = b""
     json: dict = {}
     brython: bool
     gql_endpoints: dict[str, Callable[..., "GQLResponse"]] = {}
@@ -169,8 +169,8 @@ class Handler(BaseHTTPRequestHandler):
         self,
         code: int,
         *,
-        message: str = None,
-        headers: dict[str, str] = None,
+        message: str | None = None,
+        headers: dict[str, str] | None = None,
         traceback: str = "",
         **kwargs,
     ) -> None:
@@ -178,6 +178,8 @@ class Handler(BaseHTTPRequestHandler):
         if exists(error_page_path):
             self.respond_file(code, error_page_path)
         else:
+            assert message is not None
+            assert headers is not None
             self.respond(
                 code=code,
                 headers=headers,
@@ -202,7 +204,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header("Content-type", detect_content_type(filename))
         with open(filename, "rb") as f:
-            self.send_header("Content-length", os.path.getsize(filename))
+            self.send_header("Content-length", f"{os.path.getsize(filename)}")
             self.end_headers()
             self.wfile.write(f.read())
 
@@ -220,7 +222,7 @@ class Handler(BaseHTTPRequestHandler):
         if "Content-type" not in self.headers:
             self.send_header("Content-type", "text/html")
         if "Content-length" not in self.headers and message:
-            self.send_header("Content-length", len(message))
+            self.send_header("Content-length", f"{len(message)}")
         self.end_headers()
         if message:
             self.wfile.write(message.encode())
@@ -236,7 +238,7 @@ class Handler(BaseHTTPRequestHandler):
         return path
 
     @staticmethod
-    def match_route(path: str, route: str) -> tuple[bool, dict[str, str]]:
+    def match_route(path: str, route: str) -> tuple[bool, dict[str, str | type]]:
         """Checks if a given `path` from a request matches a given `route` from a predefined route.
 
         Args:
@@ -247,13 +249,12 @@ class Handler(BaseHTTPRequestHandler):
             matches the route, and a dictionary containing the keyword variables from the route.
         """
         if len(path.split("/")) == len(route.split("/")):
-            kwargs = {}
+            kwargs: dict[str, type | str] = {}
             for path_part, route_part in zip(path.split("/"), route.split("/")):
                 if route_part.startswith(":"):
                     # Check if the route part specifies a type
                     split = route_part.split(":")[1:]
                     # standard route syntax validation
-
                     if len(split) == 2:
                         route_part, type_ = split
                     elif len(split) == 1:
@@ -301,8 +302,8 @@ class Handler(BaseHTTPRequestHandler):
                 # if all else fails, index is poggers
                 target = f"{self.page_dir}/index.{target_ext}"
                 if not os.path.exists(target):
-                    target = None
-        return target
+                    target = ""
+        return target if target else None
 
     @staticmethod
     def _make_method(http_method: Callable):
@@ -315,10 +316,7 @@ class Handler(BaseHTTPRequestHandler):
             # Getting body:
             length = int(self.headers.get("Content-Length", 0))
             if length:
-                if self.headers.get("Content-Type") == "application/json":
-                    self.body = self.rfile.read(length).decode()
-                else:
-                    self.body = self.rfile.read(length)
+                self.body = self.rfile.read(length)
                 # Setting up json
                 if self.headers.get("Content-Type") == "application/json":
                     self.json = json.loads(self.body)
@@ -335,12 +333,11 @@ class Handler(BaseHTTPRequestHandler):
                             self.end_headers()
                             self.flush_headers()
 
-                            for event in self.responses["stream"][func_path](
+                            for e in self.responses["stream"][func_path](
                                 Request(self, params=kwargs), StreamResponse(self)
                             ):
-                                event: Event
+                                event: Event = e
                                 self.wfile.write(event.to_bytes())
-                                self.wfile.flush()
                                 if event.event_name == "close":
                                     return
                             return
@@ -407,7 +404,7 @@ class Handler(BaseHTTPRequestHandler):
 
                                 self.send_response(200)
                                 self.send_header("Content-Type", "text/html")
-                                self.send_header("Content-Length", len(new_html))
+                                self.send_header("Content-Length", f"{len(new_html)}")
                                 self.end_headers()
                                 self.wfile.write(new_html.encode())
                             return
@@ -481,7 +478,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 class RouteExistsError(Exception):
-    def __init__(self, route: str = ...):
+    def __init__(self, route: str | ellipsis = ...):
         """
         Raised when a route already exists.
         """
@@ -491,7 +488,9 @@ class RouteExistsError(Exception):
 
 
 class Event:
-    def __init__(self, data: str, event_name: str = None, id: str = None):
+    def __init__(
+        self, data: str, event_name: str | None = None, id: str | int | None = None
+    ):
         """
         Yeild an instance to stream events to the client.
         Set up a listener with `http_plus.stream(path=str)`
@@ -554,7 +553,7 @@ class Request:
         `Request.params["example-id"]` or `Request.params.get("example-id")`.
         """
 
-        def __init__(self, kwargs: dict[str, str]):
+        def __init__(self, kwargs: dict[str, str | type]):
             for param, value in kwargs.items():
                 # Fun fact, setattr is ~39% faster than __setattr__.
                 setattr(self, param, value)
@@ -572,11 +571,9 @@ class Request:
             return self.__repr__()
 
         def __eq__(self, o: object) -> bool:
-            if isinstance(o, Request.params):
-                return self.__repr__() == o.__repr__()
-            return False
+            return self.__repr__() == o.__repr__()
 
-    def __init__(self, request: Handler, /, *, params: dict[str, str]):
+    def __init__(self, request: Handler, /, *, params: dict[str, str | type]):
         self.request = request
         "The request object directly from the HTTP Server."
         self.path = request.path
@@ -706,7 +703,7 @@ class Response:
         self.set_header("Content-Length", len(self.body))
         return self
 
-    def prompt_download(self, path: str, filename: str = None) -> "Response":
+    def prompt_download(self, path: str, filename: str | None = None) -> "Response":
         """
         Prompts a file download!
 
@@ -753,7 +750,6 @@ class Response:
         Sends the response to the client.
         You should not call this manually unless you are modifying `http_plus.Server`.
         """
-        print("Response was called")
         self.response.send_response(self.status_code)
         for header, value in self.headers.items():
             self.response.send_header(header, value)
@@ -771,7 +767,9 @@ class StreamResponse(Response):
     and `event` and `id` is optional (`event` defaults to "message").
     """
 
-    def event(self, data: str, event_name: str = None, id: int = None) -> Event:
+    def event(
+        self, data: str, event_name: str | None = None, id: int | None = None
+    ) -> Event:
         """
         Creates an event that will be streamed to the client. Yield this function to stream events to the client.
 
@@ -793,14 +791,14 @@ class GQLResponse(Response):
     You *must* return this from the GraphQL method listener function.
     """
 
-    def set_database(self, database: dict[str,]):
+    def set_database(self, database: dict[str, Any]):
         """
         Resolves a GQL query with the specified database/dict.
         """
         self.database = database
         return self
 
-    def _resolve(self) -> dict[str]:
+    def _resolve(self) -> dict[str, Any] | None:
         schema = self.response.gql_schemas[self.response.path]
         parsed_schema = graphql.build_schema(schema)
         query = self.response.json["query"]
