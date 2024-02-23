@@ -16,6 +16,7 @@ from . import __version__
 from .static_responses import SEND_RESPONSE_CODE
 from .content_types import detect_content_type
 import json
+from itertools import zip_longest
 
 STATUS_MESSAGES = {
     # INFORMATIONAL
@@ -361,7 +362,7 @@ class Handler(BaseHTTPRequestHandler):
                         extension = "html"
 
                     if extension == "html" and not os.path.exists(
-                        f"{self.page_dir}{path}.py"
+                        f"{self.page_dir}{path}/.py"
                     ):
                         filename = self.serve_filename(path, extension)
                         if filename is not None:
@@ -374,6 +375,7 @@ class Handler(BaseHTTPRequestHandler):
                         for file in os.listdir(f"{self.page_dir}{path}"):
                             if file.endswith(".py"):
                                 py_files.append(file)
+                        
                         if py_files:
                             html_filename = f"{self.page_dir}{path}/.{extension}"
                             with open(html_filename, "r") as f:
@@ -415,18 +417,34 @@ class Handler(BaseHTTPRequestHandler):
                             self.respond_file(200, filename)
                             return
 
-                for route_path in self.routes[method_name]:
+                # for route_path in self.routes[method_name]:
+                #    if route_path == self.path:
+                #        route = self.routes[method_name][route_path]
+                #        self.respond_file(
+                #            200, self.resolve_path(method_name, route.full_path)
+                #        )
+                #        return
+                # for func_path in self.responses[method_name]:
+                #    matched, kwargs = self.match_route(self.path, func_path)
+                #    if matched:
+                #        self.responses[method_name][func_path](
+                #            Request(self, params=kwargs), Response(self)
+                #        )()
+                #        return
+                for route_path, func_path in zip_longest(
+                    self.routes[method_name],
+                    self.responses[method_name],
+                    fillvalue=None,
+                ):
                     if route_path == self.path:
                         route = self.routes[method_name][route_path]
                         self.respond_file(
                             200, self.resolve_path(method_name, route.full_path)
                         )
                         return
-                for func_path in self.responses[method_name]:
-                    matched, kwargs = self.match_route(self.path, func_path)
-                    if matched:
+                    if func_path == self.path:
                         self.responses[method_name][func_path](
-                            Request(self, params=kwargs), Response(self)
+                            Request(self, params={}), Response(self)
                         )()
                         return
                 else:
@@ -478,7 +496,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 class RouteExistsError(Exception):
-    def __init__(self, route: str | ellipsis = ...):
+    def __init__(self, route: "str | ellipsis" = ...):
         """
         Raised when a route already exists.
         """
